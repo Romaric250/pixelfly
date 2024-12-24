@@ -15,7 +15,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import { useRole } from "@/hooks/use-role";
+// import { useRole } from "@/hooks/use-role";
 
 const commonRoutes = [
   {
@@ -72,7 +72,8 @@ const adminRoutes = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { role } = useRole();
+  const role = "admin"
+  // const { role } = useRole();
   
   const routes = [...commonRoutes, ...(role === 'admin' ? adminRoutes : [])];
 

@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 
 export function LandingHero() {
-  const { isSignedIn } = useAuth();
+  const isSignedIn = true
+  // const { isSignedIn } = useAuth();
 
   return (
     <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">

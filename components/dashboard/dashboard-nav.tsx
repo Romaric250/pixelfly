@@ -14,7 +14,7 @@ export function DashboardNav() {
             <Bell className="h-5 w-5" />
           </Button>
           <ModeToggle />
-          <UserButton afterSignOutUrl="/" />
+          {/* <UserButton afterSignOutUrl="/" /> */}
         </div>
       </div>
     </div>

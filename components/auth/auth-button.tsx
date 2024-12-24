@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export function AuthButton() {
-  const { isSignedIn } = useAuth();
+  // const { isSignedIn } = useAuth();
+
+  const isSignedIn = true
 
   if (isSignedIn) {
     return (
@@ -14,7 +16,7 @@ export function AuthButton() {
         <Button asChild variant="ghost">
           <Link href="/dashboard">Dashboard</Link>
         </Button>
-        <UserButton afterSignOutUrl="/" />
+        {/* <UserButton afterSignOutUrl="/" /> */}
       </div>
     );
   }

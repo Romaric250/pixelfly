@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Image, Certificate, Layout } from "lucide-react";
+import { Image, Layout } from "lucide-react";
 
 const features = [
   {
@@ -10,7 +10,7 @@ const features = [
     description: "Upload, compress, and organize your images with our intuitive drag-and-drop interface."
   },
   {
-    icon: Certificate,
+    icon: Image,
     title: "Certificate Generation",
     description: "Create professional certificates with customizable templates and bulk processing."
   },

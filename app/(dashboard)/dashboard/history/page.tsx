@@ -16,10 +16,10 @@ export default function HistoryPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Activity History</h1>
-        <DateRangePicker 
+        {/* <DateRangePicker 
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
-        />
+        /> */}
       </div>
       <ActivityList dateRange={dateRange} />
     </div>

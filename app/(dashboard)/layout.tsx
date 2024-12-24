@@ -15,6 +15,7 @@ export default function DashboardLayout({
         <DashboardNav />
         <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
           {children}
+          dashboard
         </main>
       </div>
     </div>
