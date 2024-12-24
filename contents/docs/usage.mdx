@@ -1,0 +1,64 @@
+---
+title: Usage
+date: 2020-01-01
+description: Instructions on how to use our project.
+---
+
+# Project Structure
+
+Here is the project structure:
+
+```plaintext {1} {3-4} {7-8}
+docs-template/
+├── public/
+├── app/ // Main application
+│ ├── docs/ // Documentation pages
+├── components/
+│ ├── /ui
+│ ├── docs/ // Documentation components
+├── styles/ // Global styles and the mdx components styles as well
+├── lib/
+├── package.json
+├── README.md
+└── // Other configuration files
+```
+
+## How to Use
+
+To use our project, follow these steps:
+
+<Steps>
+
+<Step>Contents</Step>
+
+```bash
+mkdir -p components/buttons && touch components/buttons/sparkles.tsx
+```
+
+<Step>Paste the code</Step>{" "}
+
+Open the newly created file and paste the following code:
+
+<Step>Usage</Step>
+
+In the directory you want to use, do the following:
+
+```jsx
+import Sparkles from "@/components/buttons/sparkles";
+
+const MyButtons = () => {
+  return (
+    <div>
+      {/* your other content*/}
+
+      <Sparkles text="Nothing" />
+
+      {/* your other content*/}
+    </div>
+  );
+};
+
+export default MyButtons;
+```
+
+</Steps>
