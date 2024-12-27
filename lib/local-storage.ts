@@ -1,7 +1,6 @@
 "use client";
 import { Toast } from "@/components/ui/toast";
 
-// Type definitions
 export interface Template {
   id: string;
   name: string;
@@ -16,6 +15,7 @@ export interface Field {
   id: string;
   x: number;
   y: number;
+  rotation: number;
   width: number;
   height: number;
   type: "text" | "date" | "image";

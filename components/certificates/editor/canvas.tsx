@@ -1,13 +1,14 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
-import { Template, Field } from "@/lib/local-storage";
+import { useState, useEffect, useRef } from "react";
+import { useUndoRedo } from "@/hooks/use-undo-redo";
+import { Field } from "@/lib/local-storage";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, RotateCcw } from "lucide-react";
 
 interface CanvasProps {
-  template: Template;
+  template: { url: string };
   fields: Field[];
   selectedField: string | null;
   onAddField: (field: Field) => void;
@@ -23,82 +24,53 @@ export function Canvas({
   onSelectField,
   onUpdateField,
 }: CanvasProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [scale, setScale] = useState(1);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
+  const { state: field, add, update, remove, undo, redo, canUndo, canRedo } = useUndoRedo<Field[]>([]);
+
 
   useEffect(() => {
-    const updateCanvasSize = () => {
-      const container = containerRef.current;
-      const canvas = canvasRef.current;
-      if (!container || !canvas) return;
-
-      const image = new Image();
-      image.src = template.url;
-      image.onload = () => {
-        // Calculate scale to fit container while maintaining aspect ratio
-        const containerWidth = container.clientWidth;
-        const containerHeight = container.clientHeight;
-        const imageAspect = image.width / image.height;
-        const containerAspect = containerWidth / containerHeight;
-
-        let newScale;
-        if (imageAspect > containerAspect) {
-          newScale = containerWidth / image.width;
-        } else {
-          newScale = containerHeight / image.height;
-        }
-
-        // Apply scale with some padding
-        newScale *= 0.9;
-        setScale(newScale);
-
-        // Set canvas size
-        canvas.width = image.width;
-        canvas.height = image.height;
-        
-        renderCanvas();
-      };
-    };
-
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
+    const img = new Image();
+    img.src = template.url;
+    img.onload = () => setImage(img);
   }, [template.url]);
 
   const renderCanvas = () => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx || !image) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw template image
-    const image = new Image();
-    image.src = template.url;
-    ctx.drawImage(image, 0, 0);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
     // Draw fields
-    fields.forEach(field => {
+    fields.forEach((field) => {
+      ctx.save();
+      ctx.translate(field.x, field.y);
+      ctx.rotate((field.rotation || 0) * (Math.PI / 180));
+
       ctx.strokeStyle = field.id === selectedField ? "#0ea5e9" : "#64748b";
       ctx.lineWidth = 2;
-      ctx.strokeRect(field.x, field.y, field.width, field.height);
+      ctx.strokeRect(0, 0, field.width, field.height);
 
-      // Draw field type indicator
-      ctx.fillStyle = field.id === selectedField ? "#0ea5e9" : "#64748b";
-      ctx.font = "12px sans-serif";
-      ctx.fillText(field.type, field.x + 4, field.y + 16);
+      ctx.fillStyle = "#000";
+      ctx.font = "16px sans-serif";
+      ctx.fillText(field.type || "Text", 5, 15);
+
+      ctx.restore();
     });
   };
 
   useEffect(() => {
     renderCanvas();
-  }, [fields, selectedField, scale, pan]);
+  }, [fields, selectedField, image, scale, pan]);
 
   const getMousePos = (e: React.MouseEvent) => {
     const canvas = canvasRef.current;
@@ -111,126 +83,69 @@ export function Canvas({
     };
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setScale(s => Math.min(Math.max(s * delta, 0.1), 5));
-  };
-
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 1 || e.button === 2) { // Middle or right click for panning
+    const pos = getMousePos(e);
+    const field = fields.find(
+      (f) =>
+        pos.x >= f.x &&
+        pos.x <= f.x + f.width &&
+        pos.y >= f.y &&
+        pos.y <= f.y + f.height
+    );
+    if (field) {
+      onSelectField(field.id);
       setIsDragging(true);
-      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+      setDragStart(pos);
     } else {
-      const pos = getMousePos(e);
-      setIsDrawing(true);
-      setStartPos(pos);
+      onSelectField(null);
     }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
-      setPan({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      });
-      return;
-    }
-
-    if (!isDrawing) return;
+    if (!isDragging || !selectedField) return;
 
     const pos = getMousePos(e);
-    renderCanvas();
+    const dx = pos.x - dragStart.x;
+    const dy = pos.y - dragStart.y;
+    setDragStart(pos);
 
-    // Draw selection rectangle
-    const ctx = canvasRef.current?.getContext('2d');
-    if (ctx) {
-      ctx.strokeStyle = "#0ea5e9";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(
-        startPos.x,
-        startPos.y,
-        pos.x - startPos.x,
-        pos.y - startPos.y
-      );
-    }
+    onUpdateField(selectedField, {
+      x: (fields.find((f) => f.id === selectedField)?.x || 0) + dx,
+      y: (fields.find((f) => f.id === selectedField)?.y || 0) + dy,
+    });
   };
 
-  const handleMouseUp = (e: React.MouseEvent) => {
-    if (isDragging) {
-      setIsDragging(false);
-      return;
-    }
-
-    if (!isDrawing) return;
-
-    const pos = getMousePos(e);
-    setIsDrawing(false);
-
-    // Create new field if selection is large enough
-    const width = Math.abs(pos.x - startPos.x);
-    const height = Math.abs(pos.y - startPos.y);
-    if (width > 10 && height > 10) {
-      const newField: Field = {
-        id: crypto.randomUUID(),
-        x: Math.min(startPos.x, pos.x),
-        y: Math.min(startPos.y, pos.y),
-        width,
-        height,
-        type: "text",
-      };
-      onAddField(newField);
-    }
+  const handleMouseUp = () => {
+    setIsDragging(false);
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="relative w-full h-[600px] bg-muted/30 rounded-lg overflow-hidden"
-      onWheel={handleWheel}
-      onContextMenu={e => e.preventDefault()}
     >
       <canvas
         ref={canvasRef}
+        width={800}
+        height={600}
+        className="absolute"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={() => {
-          setIsDrawing(false);
-          setIsDragging(false);
-        }}
+        onMouseLeave={handleMouseUp}
         style={{
-          cursor: isDrawing ? 'crosshair' : isDragging ? 'grab' : 'default',
-          transform: `scale(${scale}) translate(${pan.x/scale}px, ${pan.y/scale}px)`,
-          transformOrigin: '0 0',
+          cursor: isDragging ? "grabbing" : "default",
+          transform: `scale(${scale}) translate(${pan.x}px, ${pan.y}px)`,
+          transformOrigin: "0 0",
         }}
-        className="absolute"
       />
-      
+
       <div className="absolute bottom-4 right-4 space-x-2">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => setScale(s => s * 1.1)}
-        >
-          <Plus className="h-4 w-4" />
+        <Button disabled={!canUndo} onClick={undo}>
+          Undo
         </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => setScale(s => s * 0.9)}
-        >
-          <Minus className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => {
-            setScale(1);
-            setPan({ x: 0, y: 0 });
-          }}
-        >
-          <RotateCcw className="h-4 w-4" />
+        <Button disabled={!canRedo} onClick={redo}>
+          Redo
         </Button>
       </div>
     </div>
