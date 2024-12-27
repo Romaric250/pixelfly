@@ -1,31 +1,31 @@
 
-import axios from 'axios'
+// import axios from 'axios'
 
 
 
 
-export const GenerateCertificate = asnyc() => {
- try {
+// export const GenerateCertificate = asnyc() => {
+//  try {
 
-    const request = await axios.post('api/certificates/generate', {
+//     const request = await axios.post('api/certificates/generate', {
         
-    })
+//     })
 
 
-    if (request.status === 200){
+//     if (request.status === 200){
 
-        return request.data
+//         return request.data
 
-    }
-    return null
-    } catch (eror:any) {
+//     }
+//     return null
+//     } catch (eror:any) {
 
 
-        console.log(eror.message)
-        return null 
+//         console.log(eror.message)
+//         return null 
         
-    }
+//     }
     
 
 
-}
+// }

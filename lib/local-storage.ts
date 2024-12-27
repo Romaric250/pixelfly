@@ -16,6 +16,7 @@ export interface Field {
   x: number;
   y: number;
   rotation: number;
+  value: string;
   width: number;
   height: number;
   type: "text" | "date" | "image";

@@ -21,6 +21,8 @@ export function FieldTypeSelector({ onSelect }: FieldTypeSelectorProps) {
       type,
       x: 0,
       y: 0,
+      rotation: 0,
+      value: "",
       width: 100,
       height: 30,
     };
