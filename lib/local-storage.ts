@@ -5,6 +5,8 @@ export interface Template {
   id: string;
   name: string;
   url: string;
+  width: number;
+  height: number;
   fields: Field[];
   created_at: string;
 }

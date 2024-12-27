@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTemplates } from "@/hooks/use-templates";
@@ -13,20 +14,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useTemplate } from "@/hooks/use-templates";
 
 export function CertificateGenerator() {
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [names, setNames] = useState<string>("");
   const [generating, setGenerating] = useState(false);
   const { templates } = useTemplates();
+  const { template } = useTemplate(selectedTemplateId);
 
   const handleGenerate = async () => {
-    if (!selectedTemplate || !names.trim()) return;
+    if (!selectedTemplateId || !template || !names.trim()) return;
 
     setGenerating(true);
     try {
-      const nameList = names.split("\n").filter(name => name.trim());
-      const blob = await generateCertificates(selectedTemplate, nameList);
+      const nameList = names
+        .split("\n")
+        .filter(name => name.trim())
+        .map(name => ({ name: name.trim() }));
+
+      const blob = await generateCertificates(
+        selectedTemplateId,
+        template,
+        nameList
+      );
       
       // Create download link
       const url = window.URL.createObjectURL(blob);
@@ -49,8 +60,8 @@ export function CertificateGenerator() {
       <div className="space-y-4">
         <h2 className="text-lg font-medium">Select Template</h2>
         <Select
-          value={selectedTemplate}
-          onValueChange={setSelectedTemplate}
+          value={selectedTemplateId}
+          onValueChange={setSelectedTemplateId}
         >
           <SelectTrigger>
             <SelectValue placeholder="Choose a template" />
@@ -77,7 +88,7 @@ export function CertificateGenerator() {
 
       <Button
         onClick={handleGenerate}
-        disabled={!selectedTemplate || !names.trim() || generating}
+        disabled={!selectedTemplateId || !names.trim() || generating}
         className="w-full"
       >
         <Download className="w-4 h-4 mr-2" />
