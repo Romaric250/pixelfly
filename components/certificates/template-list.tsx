@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Edit, Trash2 } from "lucide-react";
+import { Delete, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { deleteTemplate } from "@/lib/local-storage";
 
 interface Template {
   id: string;
@@ -15,6 +16,8 @@ interface TemplateListProps {
   templates: Template[];
   onSelect: (id: string) => void;
 }
+
+
 
 export function TemplateList({ templates, onSelect }: TemplateListProps) {
   return (
@@ -44,6 +47,15 @@ export function TemplateList({ templates, onSelect }: TemplateListProps) {
               >
                 <Edit className="w-4 h-4 mr-2" />
                 Edit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => deleteTemplate(template.id)}
+              >
+                 Delete
+                <Delete className="w-4 h-4 ml-2" />
+            
               </Button>
             </div>
           </div>

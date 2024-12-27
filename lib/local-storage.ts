@@ -1,4 +1,5 @@
 "use client";
+import { Toast } from "@/components/ui/toast";
 
 // Type definitions
 export interface Template {
@@ -33,6 +34,7 @@ export function saveTemplate(template: Template) {
   const templates = getTemplates();
   templates.push(template);
   localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
+//   window.location.reload()
 }
 
 export function updateTemplate(id: string, updates: Partial<Template>) {
@@ -53,4 +55,7 @@ export function deleteTemplate(id: string) {
   const templates = getTemplates();
   const filtered = templates.filter(t => t.id !== id);
   localStorage.setItem(TEMPLATES_KEY, JSON.stringify(filtered));
+  window.location.reload()
+
+
 }
