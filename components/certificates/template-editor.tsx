@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Save, X } from "lucide-react";
+import { Redo, Save, Undo, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTemplate } from "@/hooks/use-templates";
 import { Field } from "@/lib/local-storage";
@@ -97,10 +97,10 @@ export function TemplateEditor({ templateId, onClose }: TemplateEditorProps) {
 
         <div className="flex justify-end gap-2 p-4 border-t">
           <Button disabled={!canUndo} onClick={undo}>
-            Undo
+            <Undo className="w-4 h-4 mr-2" />
           </Button>
           <Button disabled={!canRedo} onClick={redo}>
-            Redo
+            <Redo className="w-4 h-4 mr-2" />
           </Button>
         </div>
       </motion.div>
