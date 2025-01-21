@@ -29,25 +29,27 @@ const commonRoutes = [
 //     icon: Image,
 //     href: "/dashboard/images",
 //     color: "text-violet-500",
-//   },  
+//   },
+
+{
+  label: "Projects",
+  icon: Users,
+  href: "/dashboard/projects",
+  color: "text-orange-700",
+},
   {
     label: "Certificates",
     icon: FileText,
     href: "/dashboard/certificates",
     color: "text-pink-700",
   },
-  {
-    label: "History",
-    icon: History,
-    href: "/dashboard/history",
-    color: "text-yellow-600",
-  },
   // {
-  //   label: "Team",
-  //   icon: Users,
-  //   href: "/dashboard/team",
-  //   color: "text-orange-700",
+  //   label: "History",
+  //   icon: History,
+  //   href: "/dashboard/history",
+  //   color: "text-yellow-600",
   // },
+ 
   {
     label: "Billing",
     icon: CreditCard,

@@ -19,7 +19,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h3 className="text-lg font-semibold mb-4">Connect</h3>
+            <h3 className="text-lg font-semibold mb-4">Star on Github</h3>
             <Link href="https://github.com/romaric250" className="flex items-center text-muted-foreground hover:text-primary">
               <Github className="h-5 w-5 mr-2" />
               GitHub
