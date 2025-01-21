@@ -665,7 +665,7 @@ export function Canvas({
       </div>
       <div
         ref={containerRef}
-        className="relative w-full h-[400px] bg-muted/30 rounded-lg overflow-hidden"
+        className="relative flex-1 min-h-0 bg-muted/30 rounded-lg overflow-auto"
       >
         <canvas
           ref={canvasRef}
