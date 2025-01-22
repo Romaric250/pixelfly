@@ -23,7 +23,7 @@ export async function POST(req:Request){
             }
         })
 
-
+return new NextResponse("Project created", {status: 200})
         
     } catch (error:any) {
        console.log("error", error.message)
