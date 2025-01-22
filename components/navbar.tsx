@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react";
 import { AuthButton } from "@/components/auth/auth-button";
 
 const navItems = [
-  { name: "Features", href: "#features" },
+  { name: "Docs", href: "#docs" },
   { name: "Pricing", href: "#pricing" },
   { name: "About", href: "#about" },
   { name: "Contact", href: "#contact" },
@@ -18,7 +18,7 @@ export function Navbar() {
 
   return (
     <nav className="fixed w-full z-50 bg-background/80 backdrop-blur-md border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <motion.div
             initial={{ opacity: 0, x: -20 }}

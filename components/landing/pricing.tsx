@@ -46,7 +46,7 @@ const pricingPlans = [
 export function Pricing() {
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <h2 className="text-3xl font-bold text-center mb-12">Choose Your Plan</h2>
         <motion.div
           initial={{ opacity: 0 }}

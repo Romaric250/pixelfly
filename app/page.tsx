@@ -14,7 +14,7 @@ export default function Home() {
       <LandingHero />
       <Features />
       <Testimonials />
-      <Pricing />
+      {/* <Pricing /> */}
       <ContactForm />
       <CallToAction />
       <Footer />

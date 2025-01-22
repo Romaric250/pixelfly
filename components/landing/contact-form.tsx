@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 export function ContactForm() {
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
