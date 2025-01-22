@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Check, Zap, Activity, History } from "lucide-react";
+import {CreditCard, Check, Zap, Activity, History} from "lucide-react";
 
 export default function BillingPage() {
   const [selectedPlan, setSelectedPlan] = useState("pro");
