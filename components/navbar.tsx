@@ -25,7 +25,7 @@ export function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             className="flex-shrink-0 flex items-center"
           >
-            <Link href="/" className="text-2xl font-bold">
+            <Link href="/" className="text-xl font-bold">
               PixelFly
             </Link>
           </motion.div>

@@ -55,8 +55,8 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode; titl
       <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mb-4">
         {icon}
       </div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-muted-foreground">{description}</p>
+      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      <p className="text-muted-foreground text-sm">{description}</p>
     </motion.div>
   );
 }

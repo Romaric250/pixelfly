@@ -14,8 +14,8 @@ export function CallToAction() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Images?</h2>
-          <p className="text-xl mb-8">Join thousands of satisfied users and start creating stunning visuals today.</p>
+          <h2 className="text-2xl font-bold mb-4">Ready to Transform Your Images?</h2>
+          <p className="text-l mb-8">Join thousands of satisfied users and start creating stunning visuals today.</p>
           <Button asChild size="lg" variant="secondary">
             <Link href="/sign-up">Get Started Now</Link>
           </Button>

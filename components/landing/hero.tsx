@@ -45,11 +45,11 @@ export function LandingHero() {
           transition={{ duration: 0.5 }}
           className="text-center"
         >
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight">
+          <h1 className="text-xl sm:text-4xl font-bold tracking-tight">
             Transform Your Images with
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/50 relative">
               {" "}
-              Pixel Fly
+              Pixel
               <motion.span
                 animate={controls}
                 variants={{
@@ -61,7 +61,7 @@ export function LandingHero() {
               >
                 Fly
               </motion.span>
-              <motion.svg
+              {/* <motion.svg
                 viewBox="0 0 160 160"
                 className="w-10 h-10 sm:w-40 sm:h-40 text-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
                 animate={controls}
@@ -88,10 +88,10 @@ export function LandingHero() {
                 }}
               >
                 <ButterflyPath />
-              </motion.svg>
+              </motion.svg> */}
             </span>
           </h1>
-          <p className="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
             Professional image management, certificate generation, and flyer creation platform
             powered by advanced AI technology.
           </p>
