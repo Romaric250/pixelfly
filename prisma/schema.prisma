@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,12 +7,44 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id          String       @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId     String       @unique
-  email       String       @unique
-  username    String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId   String   @unique
+  email     String   @unique
+  username  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  projects  Project[]
+}
+
+model Project {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  Templates   Template[]
+}
+
+model Template {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  description    String
+  templateUrl    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  templateDataId String?       @unique @db.ObjectId
+  TemplateData   TemplateData?
+  projectId      String        @db.ObjectId
+  project        Project       @relation(fields: [projectId], references: [id])
+}
+
+model TemplateData {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  templateId String   @unique @db.ObjectId
+  template   Template @relation(fields: [templateId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
