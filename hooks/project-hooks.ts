@@ -1,7 +1,9 @@
+"use server"
 import { db } from "@/lib/db"
 import { Project } from "@/types"
 import { CheckUser } from "@/utils"
-
+import { toast } from "sonner"
+import {revalidatePath, revalidateTag} from "next/cache"
 
 
 export async function GetProjects(){
@@ -66,7 +68,9 @@ export async function CreateProject(data:Project){
             }
         })
 
-        return project
+       console.log("project created", project)
+        //  revalidatePath("/dashboard/projects",'page')
+
         
     } catch (error:any) {
         console.log("error", error.message)

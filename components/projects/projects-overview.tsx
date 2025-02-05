@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ProjectCard } from "./project-card"
 import { CreateProjectDialog } from "./create-project-dialog"
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from 'lucide-react'
+import { GetProjects } from "@/hooks/project-hooks"
 
 // Placeholder for server action
 const createProject = async (name: string, description: string) => {
@@ -29,11 +30,38 @@ export function ProjectsOverview() {
   const [projects, setProjects] = useState<Array<{ id: string; name: string; description: string }>>([])
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
+  useEffect(() => {
+    const loadProjects = async () => {
+      const userprojects = await GetProjects()
+      const filtered = userprojects.map(project => ({
+        id: project.id,
+        name: project.name,
+        description: project.description
+      }))
+      setProjects([...filtered])
+    }
+    loadProjects()
+  }, [])
+
+
   const handleCreateProject = async (name: string, description: string) => {
     const newProject = await createProject(name, description)
-    setProjects([...projects, newProject])
+
+    // const userprojects = await GetProjects()
+
+    // const filtered = userprojects.map(project => ({
+    //   id: project.id,
+    //   name: project.name,
+    //   description: project.description
+    // }))
+
+    // console.log("filtered", filtered)
+
+    // setProjects([...projects, newProject])
     setIsCreateDialogOpen(false)
   }
+
+
 
   const handleDeleteProject = async (id: string) => {
     await deleteProject(id)

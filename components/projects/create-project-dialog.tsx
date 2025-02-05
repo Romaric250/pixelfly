@@ -1,9 +1,15 @@
-import { useState } from "react"
+"use client"
+
+import { use, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { CreateProject } from "@/hooks/project-hooks"
+import { toast } from "sonner"
+import { revalidatePath } from "next/cache"
+import { useRouter } from "next/navigation"
 
 interface CreateProjectDialogProps {
   isOpen: boolean
@@ -14,12 +20,28 @@ interface CreateProjectDialogProps {
 export function CreateProjectDialog({ isOpen, onClose, onCreateProject }: CreateProjectDialogProps) {
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onCreateProject(name, description)
-    setName("")
-    setDescription("")
+    setIsSubmitting(true)
+    try {
+      await CreateProject({ name, description })
+        toast.success("Project created successfully")
+        setName("")
+        setDescription("")
+        onClose()
+      // router.refresh()
+      revalidatePath("dashboard/projects", 'page')
+      }
+     catch (error:any) {
+      console.error("Error creating project:", error.message)
+      toast.error(error.message)
+    } finally {
+      setIsSubmitting(false)
+    
+    }
   }
 
   return (
@@ -53,7 +75,9 @@ export function CreateProjectDialog({ isOpen, onClose, onCreateProject }: Create
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Create Project</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Project"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

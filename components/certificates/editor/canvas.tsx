@@ -12,7 +12,6 @@ import { Switch } from "@/components/ui/switch"
 import { ZoomIn, ZoomOut, RotateCcw, Grid3X3, Undo, Redo, Move, Lock, Unlock } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-
 interface CanvasProps {
   template: { url: string }
   fields: Field[]

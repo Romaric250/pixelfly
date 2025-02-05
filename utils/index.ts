@@ -1,16 +1,17 @@
+"use server"
 import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs";
 
 
 export async function CheckUser(){
     try {
-        const user = await currentUser()
-        if (!user){
-            return null
-        }
+        // const user = await currentUser()
+        // if (!user){
+        //     return null
+        // }
         const isUserInDb = await db.user.findFirst({
             where:{
-                clerkId:user.id as string
+                clerkId:"bbvbvbn"
             }
         })
         if(!isUserInDb){
