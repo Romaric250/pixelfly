@@ -1,62 +1,69 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Image, Layout } from "lucide-react";
+import { Sparkles, Zap, Shield } from "lucide-react";
 
 const features = [
   {
-    icon: Image,
-    title: "Image Management",
-    description: "Upload, compress, and organize your images with our intuitive drag-and-drop interface."
+    icon: Sparkles,
+    title: "AI Enhancement",
+    description: "Transform any photo into professional quality with advanced AI technology."
   },
   {
-    icon: Image,
-    title: "Certificate Generation",
-    description: "Create professional certificates with customizable templates and bulk processing."
+    icon: Zap,
+    title: "Lightning Fast",
+    description: "Get results in seconds. No waiting, no complexity, just instant enhancement."
   },
   {
-    icon: Layout,
-    title: "Dynamic Flyers",
-    description: "Design stunning flyers with our advanced editor and collaborative tools."
+    icon: Shield,
+    title: "Privacy First",
+    description: "Your photos are processed securely and never stored. Complete privacy guaranteed."
   }
 ];
 
 export function Features() {
   return (
-    <section id="features" className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/50">
-      <div className="max-w-5xl mx-auto">
+    <section id="features" className="py-20 px-6 bg-purple-50">
+      <div className="max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
         >
-          {features.map((feature, index) => (
-            <FeatureCard
-              key={feature.title}
-              icon={<feature.icon className="h-10 w-10" />}
-              title={feature.title}
-              description={feature.description}
-            />
-          ))}
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            Simple. Fast. Professional.
+          </h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Everything you need to transform your photos, nothing you don't.
+          </p>
         </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {features.map((feature, index) => (
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="text-center p-8 bg-white rounded-2xl"
+            >
+              <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <feature.icon className="h-8 w-8 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                {feature.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {feature.description}
+              </p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      className="p-6 bg-background rounded-lg shadow-lg"
-    >
-      <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mb-4">
-        {icon}
-      </div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-muted-foreground text-sm">{description}</p>
-    </motion.div>
-  );
-}

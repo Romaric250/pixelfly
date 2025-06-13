@@ -1,111 +1,106 @@
 "use client";
 
-import { motion, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Upload, Star } from 'lucide-react';
 import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
-import { useEffect } from "react";
-
-const ButterflyPath = () => (
-  <motion.path
-    d="M0 40 Q 40 0, 80 40 Q 120 80, 160 40 M80 40 L80 160"
-    stroke="currentColor"
-    strokeWidth="6"
-    fill="none"
-    initial={{ pathLength: 0 }}
-    animate={{ pathLength: 1 }}
-    transition={{ duration: 2, ease: "easeInOut" }}
-  />
-);
 
 export function LandingHero() {
-  const isSignedIn = true;
-  // const { isSignedIn } = useAuth();
-  const controls = useAnimation();
-
-  useEffect(() => {
-    const animationSequence = async () => {
-      await controls.start("visible");
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      await controls.start("flyAway");
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for the butterfly to fly away
-      await controls.start("revealText");
-    };
-
-    animationSequence();
-  }, [controls]);
 
   return (
-    <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <h1 className="text-xl sm:text-4xl font-bold tracking-tight">
-            Transform Your Images with
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/50 relative">
-              {" "}
-              Pixel
-              <motion.span
-                animate={controls}
-                variants={{
-                  visible: { opacity: 0, display: "none" },
-                  flyAway: { opacity: 0, display: "none" },
-                  revealText: { opacity: 1, display: "inline-block" }
-                }}
-                className="inline-block"
-              >
-                Fly
-              </motion.span>
-              {/* <motion.svg
-                viewBox="0 0 160 160"
-                className="w-10 h-10 sm:w-40 sm:h-40 text-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                animate={controls}
-                variants={{
-                  visible: { 
-                    opacity: 1, 
-                    scale: 1, 
-                    rotate: [0, 10, -10, 0],
-                    transition: {
-                      rotate: {
-                        repeat: Infinity,
-                        duration: 2,
-                        ease: "easeInOut",
-                      }
-                    }
-                  },
-                  flyAway: { 
-                    opacity: 0, 
-                    scale: 0.5,
-                    x: 100,
-                    y: -100,
-                    transition: { duration: 1 }
-                  }
-                }}
-              >
-                <ButterflyPath />
-              </motion.svg> */}
-            </span>
-          </h1>
-          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Professional image management, certificate generation, and flyer creation platform
-            powered by advanced AI technology.
-          </p>
-          <div className="mt-10 flex justify-center gap-4">
-            <Button asChild size="lg">
-              <Link href={isSignedIn ? "/dashboard" : "/sign-up"}>
-                Get Started <ArrowRight className="ml-2 h-4 w-4" />
+    <section className="pt-24 pb-16 px-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center space-y-8">
+          {/* Main heading */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="space-y-6"
+          >
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-tight">
+              Transform Any Photo Into
+              <span className="block text-purple-600">
+                iPhone Quality
+              </span>
+            </h1>
+
+            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Upload any photo and watch our AI enhance it to professional quality.
+              Simple, fast, and completely free.
+            </p>
+          </motion.div>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          >
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 text-lg">
+              <Upload className="mr-2 h-5 w-5" />
+              Try It Now
+            </Button>
+
+            <Button variant="outline" size="lg" asChild className="border-purple-200 text-purple-600 hover:bg-purple-50 px-8 py-4 text-lg">
+              <Link href="https://github.com/romaric250/pixelfly" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                <Star className="h-5 w-5" />
+                Star on GitHub
               </Link>
             </Button>
-            <Button variant="outline" size="lg" asChild>
-              <Link href="#features">Learn More</Link>
-            </Button>
-          </div>
-        </motion.div>
+          </motion.div>
+
+          {/* Simple demo area */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="mt-16"
+          >
+            <div className="bg-purple-50 rounded-3xl p-12 max-w-4xl mx-auto">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div className="text-center">
+                  <div className="w-32 h-32 bg-gray-200 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+                    <span className="text-gray-500 text-sm">Before</span>
+                  </div>
+                  <p className="text-gray-600">Low quality photo</p>
+                </div>
+
+                <div className="text-center">
+                  <div className="w-32 h-32 bg-purple-200 rounded-2xl mx-auto mb-4 flex items-center justify-center relative">
+                    <span className="text-purple-700 text-sm">After</span>
+                    <div className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
+                      AI Enhanced
+                    </div>
+                  </div>
+                  <p className="text-gray-600">Professional quality</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-8"
+          >
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600">2s</div>
+              <div className="text-gray-600">Processing</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600">Free</div>
+              <div className="text-gray-600">Open Source</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600">10x</div>
+              <div className="text-gray-600">Better Quality</div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

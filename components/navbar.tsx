@@ -1,57 +1,44 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
-import { AuthButton } from "@/components/auth/auth-button";
-
-const navItems = [
-  { name: "Docs", href: "#docs" },
-  { name: "Pricing", href: "#pricing" },
-  { name: "About", href: "#about" },
-  { name: "Contact", href: "#contact" },
-];
+import { Menu, X, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="fixed w-full z-50 bg-background/80 backdrop-blur-md border-b">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-sm border-b border-purple-100">
+      <div className="max-w-6xl mx-auto px-6">
         <div className="flex justify-between h-16 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex-shrink-0 flex items-center"
-          >
-            <Link href="/" className="text-xl font-bold">
-              PixelFly
-            </Link>
-          </motion.div>
+          <Link href="/" className="text-2xl font-bold text-purple-600">
+            PixelFly
+          </Link>
 
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item, index) => (
-              <motion.div
-                key={item.name}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Link
-                  href={item.href}
-                  className="text-foreground/80 hover:text-foreground transition-colors"
-                >
-                  {item.name}
-                </Link>
-              </motion.div>
-            ))}
-            <AuthButton />
+            <Link href="#features" className="text-gray-600 hover:text-purple-600 transition-colors">
+              Features
+            </Link>
+            <Link href="#about" className="text-gray-600 hover:text-purple-600 transition-colors">
+              About
+            </Link>
+
+            <Button variant="outline" size="sm" asChild className="border-purple-200 text-purple-600 hover:bg-purple-50">
+              <Link href="https://github.com/romaric250/pixelfly" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                <Star className="h-4 w-4" />
+                Star
+              </Link>
+            </Button>
+
+            <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+              Try Now
+            </Button>
           </div>
 
           <div className="md:hidden">
             <button
-              className="p-2"
+              className="p-2 text-gray-600"
               onClick={() => setIsOpen(!isOpen)}
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -61,26 +48,29 @@ export function Navbar() {
       </div>
 
       {/* Mobile menu */}
-      <motion.div
-        initial={false}
-        animate={{ height: isOpen ? "auto" : 0 }}
-        className="md:hidden overflow-hidden"
-      >
-        <div className="px-2 pt-2 pb-3 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="block px-3 py-2 text-base font-medium text-foreground/80 hover:text-foreground"
-            >
-              {item.name}
+      {isOpen && (
+        <div className="md:hidden bg-white border-b border-purple-100">
+          <div className="px-6 py-4 space-y-4">
+            <Link href="#features" className="block text-gray-600 hover:text-purple-600">
+              Features
             </Link>
-          ))}
-          <div className="px-3 py-2">
-            <AuthButton />
+            <Link href="#about" className="block text-gray-600 hover:text-purple-600">
+              About
+            </Link>
+            <div className="flex flex-col space-y-2 pt-2">
+              <Button variant="outline" size="sm" asChild className="border-purple-200 text-purple-600">
+                <Link href="https://github.com/romaric250/pixelfly" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                  <Star className="h-4 w-4" />
+                  Star on GitHub
+                </Link>
+              </Button>
+              <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                Try Now
+              </Button>
+            </div>
           </div>
         </div>
-      </motion.div>
+      )}
     </nav>
   );
 }
