@@ -1,7 +1,16 @@
 {
   "name": "pixelfly",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "license": "MIT",
+  "author": "Romaric Lonfonyuy <romaric250@github.com>",
+  "description": "AI-powered photo enhancement that transforms budget phone photos into professional quality images",
+  "keywords": ["ai", "photo-enhancement", "image-processing", "nextjs", "open-source"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/romaric250/pixelfly.git"
+  },
+  "homepage": "https://github.com/romaric250/pixelfly",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
