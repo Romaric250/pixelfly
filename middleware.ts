@@ -1,9 +1,9 @@
-import { authMiddleware } from "@clerk/nextjs";
+import { NextRequest, NextResponse } from "next/server";
 
-export default authMiddleware({
-  publicRoutes: ["/", "/sign-in", "/sign-up", '/dashboard/projects'],
-  ignoredRoutes: ["/api/webhooks/clerk", "/api/uploadthing"]
-});
+export function middleware(request: NextRequest) {
+  // For now, allow all requests - Better Auth handles its own middleware
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],

@@ -1,28 +1,31 @@
 "use server"
 import { db } from "@/lib/db";
-import { currentUser } from "@clerk/nextjs";
-
+import { auth } from "@/lib/auth";
 
 export async function CheckUser(){
     try {
-        // const user = await currentUser()
-        // if (!user){
-        //     return null
-        // }
+        const session = await auth.api.getSession({
+            headers: new Headers()
+        });
+
+        if (!session) {
+            return null;
+        }
+
         const isUserInDb = await db.user.findFirst({
             where:{
-                clerkId:"bbvbvbn"
+                id: session.user.id
             }
         })
+
         if(!isUserInDb){
             return null
         }
 
         return isUserInDb
 
-        
     } catch (error:any) {
         console.log(error.message)
-        
+        return null;
     }
 }
