@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Star, Sparkles, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthButton } from "@/components/auth/auth-button";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -94,20 +95,9 @@ export function Navbar() {
               </motion.div>
             </div>
 
-            {/* Unique CTA button */}
+            {/* Auth Button */}
             <div className="hidden md:block">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button
-                  size="sm"
-                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-full px-6 shadow-lg shadow-purple-200"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Try Now
-                </Button>
-              </motion.div>
+              <AuthButton />
             </div>
 
             {/* Mobile menu button */}
@@ -176,13 +166,9 @@ export function Navbar() {
                 </Link>
               </Button>
 
-              <Button
-                size="sm"
-                className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-full"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Try Now
-              </Button>
+              <div className="w-full">
+                <AuthButton />
+              </div>
             </div>
           </div>
         </div>

@@ -44,10 +44,13 @@ export function LandingHero() {
             >
               <Button
                 size="lg"
+                asChild
                 className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-10 py-5 text-lg font-semibold rounded-full shadow-xl shadow-purple-200"
               >
-                <Upload className="mr-3 h-6 w-6" />
-                Try It Now
+                <Link href="/sign-up">
+                  <Upload className="mr-3 h-6 w-6" />
+                  Try It Now
+                </Link>
               </Button>
             </motion.div>
 
