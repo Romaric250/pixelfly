@@ -26,7 +26,8 @@ export function SignInForm() {
         email,
         password,
       });
-      // Redirect will be handled by Better Auth
+      setError("");
+      alert("Sign-in successful! (This is a demo - authentication will be implemented with the Python backend)");
     } catch (err) {
       setError("Invalid email or password");
     } finally {
@@ -40,6 +41,7 @@ export function SignInForm() {
       await signIn.social({
         provider: "google",
       });
+      alert("Google sign-in successful! (This is a demo - authentication will be implemented with the Python backend)");
     } catch (err) {
       setError("Failed to sign in with Google");
     } finally {

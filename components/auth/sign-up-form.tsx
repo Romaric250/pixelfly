@@ -42,7 +42,9 @@ export function SignUpForm() {
         password,
         name,
       });
-      // Redirect will be handled by Better Auth
+      // Show success message
+      setError("");
+      alert("Account created successfully! (This is a demo - authentication will be implemented with the Python backend)");
     } catch (err) {
       setError("Failed to create account. Email might already be in use.");
     } finally {
@@ -56,6 +58,7 @@ export function SignUpForm() {
       await signIn.social({
         provider: "google",
       });
+      alert("Google sign-up successful! (This is a demo - authentication will be implemented with the Python backend)");
     } catch (err) {
       setError("Failed to sign up with Google");
     } finally {
