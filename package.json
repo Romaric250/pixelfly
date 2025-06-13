@@ -17,6 +17,11 @@
     "url": "https://github.com/romaric250/pixelfly.git"
   },
   "homepage": "https://github.com/romaric250/pixelfly",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "packageManager": "npm@10.0.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
