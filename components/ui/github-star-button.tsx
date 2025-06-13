@@ -1,9 +1,9 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { Star, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { useGitHubStats } from '@/hooks/use-github-stats';
 
 interface GitHubStarButtonProps {
   username: string;
@@ -17,7 +17,41 @@ interface GitHubStats {
 }
 
 export function GitHubStarButton({ username, repo, className = "" }: GitHubStarButtonProps) {
-  const { stats, loading, error } = useGitHubStats(username, repo);
+  const [stats, setStats] = useState<GitHubStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/github-stats?username=${username}&repo=${repo}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch GitHub stats');
+        }
+
+        const data = await response.json();
+        setStats({
+          stars: data.stars,
+          lastUpdated: data.lastUpdated
+        });
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        setStats({
+          stars: 0,
+          lastUpdated: new Date().toISOString()
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStats();
+    const interval = setInterval(fetchStats, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [username, repo]);
 
   const handleStarClick = () => {
     window.open(`https://github.com/${username}/${repo}`, '_blank', 'noopener,noreferrer');

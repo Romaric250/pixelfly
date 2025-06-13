@@ -6,7 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Eye, EyeOff, Sparkles, User } from "lucide-react";
-import { signUp, signIn } from "@/lib/auth-client";
+// Mock auth functions for demo
+const mockSignUp = {
+  email: async ({ email, password, name }: { email: string; password: string; name: string }) => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return { success: true };
+  }
+};
+
+const mockSignIn = {
+  email: async ({ email, password }: { email: string; password: string }) => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return { success: true };
+  }
+};
 import Link from "next/link";
 
 export function SignUpForm() {
@@ -37,7 +50,7 @@ export function SignUpForm() {
     }
 
     try {
-      await signUp.email({
+      await mockSignUp.email({
         email,
         password,
         name,
@@ -55,9 +68,7 @@ export function SignUpForm() {
   const handleGoogleSignUp = async () => {
     setIsLoading(true);
     try {
-      await signIn.social({
-        provider: "google",
-      });
+      await mockSignIn.email({ email: "demo@google.com", password: "demo" });
       alert("Google sign-up successful! (This is a demo - authentication will be implemented with the Python backend)");
     } catch (err) {
       setError("Failed to sign up with Google");

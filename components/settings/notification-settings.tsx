@@ -21,8 +21,8 @@ export function NotificationSettings() {
         </div>
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label>Project Updates</Label>
-            <p className="text-sm text-muted-foreground">Get notified when projects are updated</p>
+            <Label>Enhancement Updates</Label>
+            <p className="text-sm text-muted-foreground">Get notified when photo enhancements are complete</p>
           </div>
           <Switch defaultChecked />
         </div>

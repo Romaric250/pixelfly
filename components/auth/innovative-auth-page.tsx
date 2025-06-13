@@ -7,7 +7,24 @@ import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Eye, EyeOff, User, Sparkles } from "lucide-react";
-import { signIn, signUp } from "@/lib/auth-client";
+// Mock auth functions for demo
+const mockSignIn = {
+  email: async ({ email, password }: { email: string; password: string }) => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return { success: true };
+  },
+  social: async ({ provider }: { provider: string }) => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return { success: true };
+  }
+};
+
+const mockSignUp = {
+  email: async ({ email, password, name }: { email: string; password: string; name: string }) => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return { success: true };
+  }
+};
 import Link from "next/link";
 
 interface InnovativeAuthPageProps {
@@ -32,10 +49,10 @@ export function InnovativeAuthPage({ mode }: InnovativeAuthPageProps) {
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     try {
-      await signIn.social({
+      await mockSignIn.social({
         provider: "google",
-        callbackURL: "/",
       });
+      alert(`Google ${isSignUp ? "sign up" : "sign in"} successful! (This is a demo)`);
     } catch (err) {
       setError(`Failed to ${isSignUp ? "sign up" : "sign in"} with Google`);
     } finally {
@@ -62,13 +79,13 @@ export function InnovativeAuthPage({ mode }: InnovativeAuthPageProps) {
 
     try {
       if (isSignUp) {
-        await signUp.email({
+        await mockSignUp.email({
           email,
           password,
           name,
         });
       } else {
-        await signIn.email({
+        await mockSignIn.email({
           email,
           password,
         });
