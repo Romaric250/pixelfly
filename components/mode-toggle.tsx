@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export function ModeToggle() {
   const { theme, setTheme } = useTheme();
+// did nnot know there was a theme here ohh
 
   return (
     <Button
