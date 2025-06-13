@@ -83,9 +83,9 @@ export function InnovativeAuthPage({ mode }: InnovativeAuthPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-purple-50/30 to-white">
+    <div className="bg-gradient-to-br from-white via-purple-50/30 to-white">
       {/* Main content */}
-      <div className="pt-32 pb-20 px-6">
+      <div className="pt-16 pb-16 px-6">
         <div className="max-w-2xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
