@@ -23,40 +23,46 @@ const features = [
 
 export function Features() {
   return (
-    <section id="features" className="py-20 px-6 bg-purple-50">
+    <section id="features" className="py-24 px-6 bg-gradient-to-b from-purple-50/50 to-white">
       <div className="max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          transition={{ duration: 0.8 }}
+          className="text-center mb-20"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8 leading-tight">
             Simple. Fast. Professional.
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Everything you need to transform your photos, nothing you don't.
+          <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto font-light leading-relaxed">
+            Everything you need to transform your photos,
+            <span className="block mt-2 font-medium text-purple-600">nothing you don't.</span>
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-10">
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="text-center p-8 bg-white rounded-2xl"
+              transition={{ duration: 0.8, delay: index * 0.2 }}
+              whileHover={{ y: -5 }}
+              className="text-center p-10 bg-white/80 backdrop-blur-sm rounded-3xl border border-purple-100/50 shadow-xl shadow-purple-100/20 hover:shadow-2xl hover:shadow-purple-200/30 transition-all duration-300"
             >
-              <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <feature.icon className="h-8 w-8 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
+              <motion.div
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ duration: 0.3 }}
+                className="w-20 h-20 bg-gradient-to-br from-purple-100 to-purple-200 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg"
+              >
+                <feature.icon className="h-10 w-10 text-purple-600" />
+              </motion.div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">
                 {feature.title}
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-600 leading-relaxed text-lg font-light">
                 {feature.description}
               </p>
             </motion.div>

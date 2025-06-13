@@ -1,15 +1,25 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Outfit, JetBrains_Mono } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 
-const inter = Inter({ subsets: ['latin'] });
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  display: 'swap',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'PixelFly - Transform Your Images',
-  description: 'Professional image management, certificate generation, and flyer creation platform',
+  title: 'PixelFly - Transform Any Photo Into iPhone Quality',
+  description: 'AI-powered photo enhancement that transforms budget phone photos into professional quality images. Open source and privacy-first.',
 };
 
 export default function RootLayout({
@@ -20,11 +30,11 @@ export default function RootLayout({
   return (
     <>
       <html lang="en" suppressHydrationWarning>
-        <body className={inter.className}>
+        <body className={`${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="light"
+            enableSystem={false}
             disableTransitionOnChange
           >
             {children}
