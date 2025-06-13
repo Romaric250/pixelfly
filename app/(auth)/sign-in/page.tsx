@@ -1,5 +1,5 @@
-import { SignInForm } from "@/components/auth/sign-in-form";
+import { InnovativeAuthPage } from "@/components/auth/innovative-auth-page";
 
 export default function SignInPage() {
-  return <SignInForm />;
+  return <InnovativeAuthPage mode="signin" />;
 }
