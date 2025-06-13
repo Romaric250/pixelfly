@@ -1,8 +1,6 @@
 
 // import axios from 'axios'
-
-
-
+// entirely comment all these pages. 
 
 // export const GenerateCertificate = asnyc() => {
 //  try {
