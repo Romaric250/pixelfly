@@ -7,28 +7,31 @@ interface DottedBackgroundProps {
 
 export function DottedBackground({ children, className = "" }: DottedBackgroundProps) {
   return (
-    <div className={`relative bg-white ${className}`}>
-      {/* Primary dotted pattern */}
+    <div className={`relative ${className}`}>
+      {/* Base background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50" />
+
+      {/* Primary dotted pattern - very visible */}
       <div
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0"
         style={{
-          backgroundImage: `radial-gradient(circle, rgba(255, 255, 255, 0.9) 1.5px, transparent 1.5px)`,
-          backgroundSize: '32px 32px',
+          backgroundImage: `radial-gradient(circle, rgba(100, 100, 100, 0.8) 2px, transparent 2px)`,
+          backgroundSize: '60px 60px',
         }}
       />
 
-      {/* Secondary smaller dots for texture */}
+      {/* Secondary smaller dots */}
       <div
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0"
         style={{
-          backgroundImage: `radial-gradient(circle, rgba(255, 255, 255, 0.6) 0.5px, transparent 0.5px)`,
-          backgroundSize: '16px 16px',
-          backgroundPosition: '8px 8px'
+          backgroundImage: `radial-gradient(circle, rgba(140, 140, 140, 0.5) 1px, transparent 1px)`,
+          backgroundSize: '30px 30px',
+          backgroundPosition: '15px 15px'
         }}
       />
 
-      {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-purple-50/20 to-transparent" />
+      {/* Purple tint overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-50/20 via-transparent to-purple-50/10" />
 
       {/* Content */}
       <div className="relative z-10">
