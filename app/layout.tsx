@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Outfit, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
+import { DottedBackground } from '@/components/ui/dotted-background';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -36,7 +37,9 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange
           >
-            {children}
+            <DottedBackground className="min-h-screen">
+              {children}
+            </DottedBackground>
             <Toaster />
           </ThemeProvider>
         </body>

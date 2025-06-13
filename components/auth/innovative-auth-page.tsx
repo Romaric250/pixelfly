@@ -83,7 +83,7 @@ export function InnovativeAuthPage({ mode }: InnovativeAuthPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-purple-50/30 to-white">
+    <div className="bg-gradient-to-br from-white via-purple-50/30 to-white">
       {/* Main content */}
       <div className="pt-24 sm:pt-28 md:pt-32 pb-16 px-4 sm:px-6">
         <div className="max-w-lg mx-auto text-center">
