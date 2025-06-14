@@ -29,7 +29,7 @@ model User {
   accounts Account[]
   sessions Session[]
 
-  @@map("users")
+  @@map("user")
 }
 
 // Account model for OAuth providers and credentials
@@ -47,7 +47,6 @@ model Account {
   password          String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  type              String   // Required field for Better Auth
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
