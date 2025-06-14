@@ -15,7 +15,7 @@ datasource db {
 
 // User model for authentication
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @map("_id")
   email     String   @unique
   name      String?
   image     String?
@@ -34,10 +34,10 @@ model User {
 
 // Account model for OAuth providers and credentials
 model Account {
-  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  id                String  @id @map("_id")
   accountId         String
   providerId        String
-  userId            String  @db.ObjectId
+  userId            String
   accessToken       String?
   refreshToken      String?
   idToken           String?
@@ -55,10 +55,12 @@ model Account {
 
 // Session model for user sessions
 model Session {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @map("_id")
   token     String   @unique
-  userId    String   @db.ObjectId
+  userId    String
   expiresAt DateTime
+  ipAddress String?
+  userAgent String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -69,7 +71,7 @@ model Session {
 
 // Verification model for email verification
 model Verification {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id         String   @id @map("_id")
   identifier String
   value      String
   expiresAt  DateTime
