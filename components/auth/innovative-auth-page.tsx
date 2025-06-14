@@ -7,24 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Eye, EyeOff, User, Sparkles } from "lucide-react";
-// Mock auth functions for demo
-const mockSignIn = {
-  email: async ({ email, password }: { email: string; password: string }) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return { success: true };
-  },
-  social: async ({ provider }: { provider: string }) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return { success: true };
-  }
-};
-
-const mockSignUp = {
-  email: async ({ email, password, name }: { email: string; password: string; name: string }) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return { success: true };
-  }
-};
+import { signIn, signUp } from "@/lib/auth-client";
 import Link from "next/link";
 
 interface InnovativeAuthPageProps {
@@ -49,10 +32,14 @@ export function InnovativeAuthPage({ mode }: InnovativeAuthPageProps) {
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     try {
-      await mockSignIn.social({
+      const result = await signIn.social({
         provider: "google",
+        callbackURL: "/",
       });
-      alert(`Google ${isSignUp ? "sign up" : "sign in"} successful! (This is a demo)`);
+
+      if (result.error) {
+        setError(result.error.message || `Failed to ${isSignUp ? "sign up" : "sign in"} with Google`);
+      }
     } catch (err) {
       setError(`Failed to ${isSignUp ? "sign up" : "sign in"} with Google`);
     } finally {
@@ -78,20 +65,27 @@ export function InnovativeAuthPage({ mode }: InnovativeAuthPageProps) {
     }
 
     try {
+      let result;
       if (isSignUp) {
-        await mockSignUp.email({
+        result = await signUp.email({
           email,
           password,
           name,
         });
       } else {
-        await mockSignIn.email({
+        result = await signIn.email({
           email,
           password,
         });
       }
-      setShowEmailModal(false);
-      // Redirect will be handled by Better Auth
+
+      if (result.error) {
+        setError(result.error.message || (isSignUp ? "Failed to create account" : "Invalid email or password"));
+      } else {
+        setShowEmailModal(false);
+        // Redirect to home page
+        window.location.href = "/";
+      }
     } catch (err) {
       setError(isSignUp ? "Failed to create account" : "Invalid email or password");
     } finally {

@@ -6,20 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Eye, EyeOff, Sparkles, User } from "lucide-react";
-// Mock auth functions for demo
-const mockSignUp = {
-  email: async ({ email, password, name }: { email: string; password: string; name: string }) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return { success: true };
-  }
-};
-
-const mockSignIn = {
-  email: async ({ email, password }: { email: string; password: string }) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return { success: true };
-  }
-};
+import { signUp, signIn } from "@/lib/auth-client";
 import Link from "next/link";
 
 export function SignUpForm() {
@@ -50,16 +37,20 @@ export function SignUpForm() {
     }
 
     try {
-      await mockSignUp.email({
+      const result = await signUp.email({
         email,
         password,
         name,
       });
-      // Show success message
-      setError("");
-      alert("Account created successfully! (This is a demo - authentication will be implemented with the Python backend)");
+
+      if (result.error) {
+        setError(result.error.message || "Failed to create account. Email might already be in use.");
+      } else {
+        // Redirect to home page
+        window.location.href = "/";
+      }
     } catch (err) {
-      setError("Failed to create account. Email might already be in use.");
+      setError("An error occurred during sign up");
     } finally {
       setIsLoading(false);
     }
@@ -68,8 +59,14 @@ export function SignUpForm() {
   const handleGoogleSignUp = async () => {
     setIsLoading(true);
     try {
-      await mockSignIn.email({ email: "demo@google.com", password: "demo" });
-      alert("Google sign-up successful! (This is a demo - authentication will be implemented with the Python backend)");
+      const result = await signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+
+      if (result.error) {
+        setError(result.error.message || "Failed to sign up with Google");
+      }
     } catch (err) {
       setError("Failed to sign up with Google");
     } finally {

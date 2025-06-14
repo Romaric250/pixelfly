@@ -6,13 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Eye, EyeOff, Sparkles } from "lucide-react";
-// Mock auth function for demo
-const mockSignIn = {
-  email: async ({ email, password }: { email: string; password: string }) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return { success: true };
-  }
-};
+import { signIn } from "@/lib/auth-client";
 import Link from "next/link";
 
 export function SignInForm() {
@@ -28,14 +22,19 @@ export function SignInForm() {
     setError("");
 
     try {
-      await mockSignIn.email({
+      const result = await signIn.email({
         email,
         password,
       });
-      setError("");
-      alert("Sign-in successful! (This is a demo - authentication will be implemented with the Python backend)");
+
+      if (result.error) {
+        setError(result.error.message || "Invalid email or password");
+      } else {
+        // Redirect to home page
+        window.location.href = "/";
+      }
     } catch (err) {
-      setError("Invalid email or password");
+      setError("An error occurred during sign in");
     } finally {
       setIsLoading(false);
     }
@@ -44,8 +43,14 @@ export function SignInForm() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await mockSignIn.email({ email: "demo@google.com", password: "demo" });
-      alert("Google sign-in successful! (This is a demo - authentication will be implemented with the Python backend)");
+      const result = await signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+
+      if (result.error) {
+        setError(result.error.message || "Failed to sign in with Google");
+      }
     } catch (err) {
       setError("Failed to sign in with Google");
     } finally {
