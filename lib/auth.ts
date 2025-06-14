@@ -21,7 +21,9 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24, // 1 day
   },
   advanced: {
-    generateId: false, // Let MongoDB generate IDs
+    database: {
+      generateId: false, // Let MongoDB generate IDs
+    },
   },
   secret: process.env.BETTER_AUTH_SECRET as string,
   baseURL: process.env.BETTER_AUTH_URL as string,
