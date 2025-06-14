@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { User, LogOut } from "lucide-react";
 import Link from "next/link";
+import { useSession, signOut } from "@/lib/auth-client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,27 +13,39 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function AuthButton() {
-  // For demo purposes, always show sign in/up buttons
-  // In production, this would check for actual user session
-  const isLoggedIn = false;
+  const { data: session, isPending } = useSession();
 
-  if (isLoggedIn) {
+  if (isPending) {
+    return (
+      <div className="w-8 h-8 bg-purple-100 rounded-full animate-pulse" />
+    );
+  }
+
+  if (session?.user) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="rounded-full p-2">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
+              {session.user.image ? (
+                <img
+                  src={session.user.image}
+                  alt={session.user.name || "User"}
+                  className="w-8 h-8 rounded-full"
+                />
+              ) : (
+                <User className="w-4 h-4 text-white" />
+              )}
             </div>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <div className="px-3 py-2">
-            <p className="text-sm font-medium">Demo User</p>
-            <p className="text-xs text-gray-500">demo@example.com</p>
+            <p className="text-sm font-medium">{session.user.name}</p>
+            <p className="text-xs text-gray-500">{session.user.email}</p>
           </div>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => alert("Sign out (demo)")}>
+          <DropdownMenuItem onClick={() => signOut()}>
             <LogOut className="w-4 h-4 mr-2" />
             Sign out
           </DropdownMenuItem>
