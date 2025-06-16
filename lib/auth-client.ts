@@ -1,4 +1,6 @@
 "use client"
+
+
 import { createAuthClient } from "better-auth/react"
 
 
@@ -14,3 +16,4 @@ export const {
   getSession,
 } = authClient
 
+// to fixed some buggy code here later on. 
