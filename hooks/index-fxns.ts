@@ -9,7 +9,6 @@
         
 //     })
 
-
 //     if (request.status === 200){
 
 //         return request.data
@@ -17,7 +16,6 @@
 //     }
 //     return null
 //     } catch (eror:any) {
-
 
 //         console.log(eror.message)
 //         return null 
