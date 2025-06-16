@@ -3,7 +3,8 @@ import { db } from "@/lib/db";
 
 export async function GET() {
   try {
-    // Get real number of users from database
+   
+
     const totalUsers = await db.user.count();
 
     // TODO: These will be implemented when we add the photo enhancement and watermarking features
