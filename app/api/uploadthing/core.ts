@@ -1,30 +1,95 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
+import { auth } from "@/lib/auth";
 
 const f = createUploadthing();
- 
-// FileRouter for your app, can contain multiple FileRoutes
-export const ourFileRouter = {
-  // Define as many FileRoutes as you like, each with a unique routeSlug
-  imageUploader: f({ image: { maxFileSize: "4MB" } })
-    // Set permissions and file types for this FileRoute
-    .middleware(async ({ req }) => {
-      // This code runs on your server before upload
-      // For demo purposes, allow all uploads
-      // In production, implement proper auth checking
 
-      // Mock user ID for demo
-      return { userId: "demo-user" };
+// Authentication function using Better Auth
+const getUser = async (req: Request) => {
+  try {
+    const session = await auth.api.getSession({
+      headers: req.headers
+    });
+    return session?.user || null;
+  } catch (error) {
+    return null;
+  }
+};
+
+// FileRouter for PixelFly - handles photo uploads for enhancement and watermarking
+export const ourFileRouter = {
+  // Photo uploader for AI enhancement
+  photoEnhancer: f({
+    image: {
+      maxFileSize: "8MB",
+      maxFileCount: 1
+    }
+  })
+    .middleware(async ({ req }) => {
+      const user = await getUser(req);
+
+      // Allow uploads for authenticated users
+      if (!user) throw new UploadThingError("Please sign in to upload photos");
+
+      return {
+        userId: user.id,
+        userEmail: user.email,
+        uploadType: "enhancement"
+      };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // This code RUNS ON YOUR SERVER after upload
-      console.log("Upload complete for userId:", metadata.userId);
- 
-      console.log("file url", file.url);
- 
-      // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
-      return { uploadedBy: metadata.userId };
+      console.log("Photo uploaded for enhancement:", {
+        userId: metadata.userId,
+        fileUrl: file.url,
+        fileName: file.name,
+        fileSize: file.size
+      });
+
+      // TODO: Trigger AI enhancement process here
+      // This will be connected to our Flask backend
+
+      return {
+        uploadedBy: metadata.userId,
+        originalUrl: file.url,
+        fileName: file.name,
+        uploadType: metadata.uploadType
+      };
+    }),
+
+  // Bulk photo uploader for watermarking
+  bulkWatermarker: f({
+    image: {
+      maxFileSize: "8MB",
+      maxFileCount: 50 // Allow bulk uploads
+    }
+  })
+    .middleware(async ({ req }) => {
+      const user = await getUser(req);
+
+      if (!user) throw new UploadThingError("Please sign in to upload photos");
+
+      return {
+        userId: user.id,
+        userEmail: user.email,
+        uploadType: "watermarking"
+      };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log("Photos uploaded for watermarking:", {
+        userId: metadata.userId,
+        fileCount: Array.isArray(file) ? file.length : 1,
+        uploadType: metadata.uploadType
+      });
+
+      // TODO: Trigger bulk watermarking process here
+      // This will be connected to our Flask backend
+
+      return {
+        uploadedBy: metadata.userId,
+        uploadType: metadata.uploadType,
+        fileCount: Array.isArray(file) ? file.length : 1
+      };
     }),
 } satisfies FileRouter;
- 
+
 export type OurFileRouter = typeof ourFileRouter;
