@@ -3,30 +3,29 @@ import { db } from "@/lib/db";
 
 export async function GET() {
   try {
-    // Get total number of users
+    // Get real number of users from database
     const totalUsers = await db.user.count();
 
-    // For now, we'll use mock data for photos enhanced and watermarked
-    // In production, you would have separate models for tracking these
-    const photosEnhanced = Math.floor(totalUsers * 15.7); // Average photos per user
-    const photosWatermarked = Math.floor(totalUsers * 8.3); // Average watermarks per user
+    // TODO: These will be implemented when we add the photo enhancement and watermarking features
+    // For now, we'll use placeholder values that will be replaced with real data later
+    const photosEnhanced = 0; // Will be counted from PhotoEnhancement model
+    const photosWatermarked = 0; // Will be counted from PhotoWatermark model
 
-    // Add some base numbers to make it look more established
     const stats = {
-      users: totalUsers + 1247, // Add base users
-      photosEnhanced: photosEnhanced + 12847, // Add base enhanced photos
-      photosWatermarked: photosWatermarked + 5632, // Add base watermarked photos
+      users: totalUsers, // Real user count from database
+      photosEnhanced: photosEnhanced, // Will be real count when feature is implemented
+      photosWatermarked: photosWatermarked, // Will be real count when feature is implemented
     };
 
     return NextResponse.json(stats);
   } catch (error) {
     console.error("Error fetching stats:", error);
-    
+
     // Return fallback stats if database is unavailable
     return NextResponse.json({
-      users: 1250,
-      photosEnhanced: 12850,
-      photosWatermarked: 5635,
+      users: 0, // Real fallback - no fake numbers
+      photosEnhanced: 0,
+      photosWatermarked: 0,
     });
   }
 }

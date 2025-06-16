@@ -12,9 +12,9 @@ interface Stats {
 
 export function LandingStats() {
   const [stats, setStats] = useState<Stats>({
-    users: 1250,
-    photosEnhanced: 12850,
-    photosWatermarked: 5635,
+    users: 0,
+    photosEnhanced: 0,
+    photosWatermarked: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -53,6 +53,7 @@ export function LandingStats() {
       label: "Happy Users",
       color: "text-blue-600",
       bgColor: "bg-blue-100",
+      isImplemented: true,
     },
     {
       icon: Image,
@@ -60,6 +61,7 @@ export function LandingStats() {
       label: "Photos Enhanced",
       color: "text-purple-600",
       bgColor: "bg-purple-100",
+      isImplemented: false, // Will be true when feature is implemented
     },
     {
       icon: Shield,
@@ -67,6 +69,7 @@ export function LandingStats() {
       label: "Photos Watermarked",
       color: "text-green-600",
       bgColor: "bg-green-100",
+      isImplemented: false, // Will be true when feature is implemented
     },
   ];
 
@@ -113,8 +116,10 @@ export function LandingStats() {
                   >
                     {isLoading ? (
                       <div className="w-20 h-12 bg-gray-200 rounded-lg mx-auto animate-pulse"></div>
-                    ) : (
+                    ) : stat.isImplemented ? (
                       <CountUpAnimation target={stat.value} />
+                    ) : (
+                      <span className="text-2xl text-gray-400 font-medium">Coming Soon</span>
                     )}
                   </motion.div>
                   
