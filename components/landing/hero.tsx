@@ -92,9 +92,9 @@ export function LandingHero() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="text-xl text-gray-600 leading-relaxed max-w-lg"
             >
-              Upload any photo and watch our advanced AI enhance it to professional quality in seconds.
+              Upload any photo and watch our advanced AI enhance it to professional quality in seconds. Plus bulk watermarking for all your photos.
               <span className="block mt-3 font-semibold text-purple-600">
-                ✨ Simple • Fast • Completely Free
+                ✨ Enhancement • Watermarking • Completely Free
               </span>
             </motion.p>
 
@@ -108,7 +108,7 @@ export function LandingHero() {
               {[
                 { value: '2s', label: 'Processing' },
                 { value: 'Free', label: 'Open Source' },
-                { value: '10x', label: 'Better Quality' }
+                { value: 'Bulk', label: 'Watermarking' }
               ].map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">

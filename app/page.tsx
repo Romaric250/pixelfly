@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { LandingHero } from "@/components/landing/hero";
+import { LandingStats } from "@/components/landing/stats";
 import { BeforeAfterShowcase } from "@/components/landing/before-after-showcase";
 import { InteractiveDemo } from "@/components/landing/interactive-demo";
 import { Features } from "@/components/landing/features";
@@ -10,6 +11,7 @@ export default function Home() {
     <div className="min-h-screen">
       <Navbar />
       <LandingHero />
+      <LandingStats />
       <BeforeAfterShowcase />
       <InteractiveDemo />
       <Features />

@@ -1,18 +1,23 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, Zap, Shield } from "lucide-react";
+import { Sparkles, Zap, Shield, Layers } from "lucide-react";
 
 const features = [
   {
     icon: Sparkles,
     title: "AI Enhancement",
-    description: "Transform any photo into professional quality with advanced AI technology."
+    description: "Transform any photo into professional iPhone 14 Pro Max quality with advanced AI technology."
+  },
+  {
+    icon: Layers,
+    title: "Bulk Watermarking",
+    description: "Add custom watermarks to hundreds of photos at once. Perfect for photographers and businesses."
   },
   {
     icon: Zap,
     title: "Lightning Fast",
-    description: "Get results in seconds. No waiting, no complexity, just instant enhancement."
+    description: "Get results in seconds. No waiting, no complexity, just instant enhancement and watermarking."
   },
   {
     icon: Shield,
@@ -41,7 +46,7 @@ export function Features() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-10">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
