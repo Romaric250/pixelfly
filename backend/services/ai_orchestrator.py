@@ -8,7 +8,7 @@ import time
 import asyncio
 from typing import Dict, List, Any, Optional
 import google.generativeai as genai
-from langchain.schema import BaseMessage
+from langchain_core.messages import BaseMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
