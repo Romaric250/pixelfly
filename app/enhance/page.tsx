@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, Sparkles, Download, Zap, Image as ImageIcon } from "lucide-react";
-// import { useFileUpload } from "@/lib/local-upload";
-// import { backendClient } from "@/lib/backend-client";
-// import { useSession } from "@/lib/auth-client";
+import { useFileUpload } from "@/lib/local-upload";
+import { backendClient } from "@/lib/backend-client";
+import { useSession } from "@/lib/auth-client";
+import { Navbar } from "@/components/navbar";
+import { BackendStatus } from "@/components/backend-status";
 
 interface EnhancementResult {
   originalUrl: string;
@@ -21,23 +23,30 @@ interface EnhancementResult {
 }
 
 export default function EnhancePage() {
-  // const { data: session } = useSession();
+  const { data: session } = useSession();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<EnhancementResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // Mock upload handler for now
-  const isUploading = false;
-  const startUpload = async (files: File[]) => {
-    if (files[0]) {
-      setSelectedFile(files[0]);
-      await processEnhancement(URL.createObjectURL(files[0]), files[0].name);
-    }
-  };
+  const { startUpload, isUploading } = useFileUpload("photoEnhancer", {
+    onClientUploadComplete: async (res) => {
+      if (res && res[0]) {
+        await processEnhancement(res[0].base64 || res[0].url, res[0].name);
+      }
+    },
+    onUploadError: (error) => {
+      setError(`Upload failed: ${error.message}`);
+      setIsProcessing(false);
+    },
+  });
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (!session?.user) {
+      setError("Please sign in to enhance photos");
+      return;
+    }
+
     if (acceptedFiles.length === 0) return;
 
     setError(null);
@@ -52,32 +61,45 @@ export default function EnhancePage() {
       setError("Failed to upload photo");
       setIsProcessing(false);
     }
-  }, [startUpload]);
+  }, [session, startUpload]);
 
   const processEnhancement = async (imageData: string, filename?: string) => {
     try {
       setProgress(20);
 
-      // Simulate processing for demo
-      setTimeout(() => setProgress(50), 500);
-      setTimeout(() => setProgress(80), 1000);
+      // Determine if we have base64 or URL
+      const isBase64 = imageData.startsWith('data:');
+      const request = {
+        user_id: session?.user?.id || "anonymous",
+        enhancement_type: "auto",
+        return_format: "base64" as const,
+        ...(isBase64
+          ? { image_base64: imageData.split(',')[1] }
+          : { image_url: imageData }
+        )
+      };
 
-      // Simulate backend call
-      setTimeout(() => {
+      // Call backend for AI enhancement
+      const enhancementResult = await backendClient.enhancePhotoWithProgress(
+        request,
+        (progress) => setProgress(progress)
+      );
+
+      if (enhancementResult.success) {
         setResult({
           originalUrl: imageData,
-          enhancedUrl: imageData, // Same for demo
-          enhancedBase64: undefined,
-          originalFilename: filename,
-          processingTime: 2.5,
-          enhancementsApplied: ["brightness_enhancement", "contrast_improvement", "noise_reduction"]
+          enhancedUrl: enhancementResult.enhanced_url,
+          enhancedBase64: enhancementResult.enhanced_base64,
+          originalFilename: filename || enhancementResult.original_filename,
+          processingTime: enhancementResult.processing_time,
+          enhancementsApplied: enhancementResult.enhancements_applied
         });
-        setProgress(100);
-        setIsProcessing(false);
-      }, 1500);
-
+      } else {
+        throw new Error(enhancementResult.error || "Enhancement failed");
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : "Enhancement failed");
+    } finally {
       setIsProcessing(false);
       setProgress(0);
     }
@@ -94,17 +116,26 @@ export default function EnhancePage() {
   });
 
   const downloadEnhanced = () => {
-    if (result?.enhancedUrl) {
-      // Create download link
+    if (result?.enhancedBase64) {
+      // Download from base64 data
+      const filename = result.originalFilename
+        ? `enhanced-${result.originalFilename}`
+        : 'enhanced-photo.jpg';
+      backendClient.downloadBase64Image(result.enhancedBase64, filename);
+    } else if (result?.enhancedUrl) {
+      // Fallback to URL download
       const link = document.createElement('a');
       link.href = result.enhancedUrl;
-      link.download = result.originalFilename ? `enhanced-${result.originalFilename}` : 'enhanced-photo.jpg';
+      link.download = 'enhanced-photo.jpg';
       link.click();
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 py-20">
+        <div className="max-w-4xl mx-auto p-6 space-y-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
           AI Photo Enhancement
@@ -113,6 +144,9 @@ export default function EnhancePage() {
           Transform your photos to iPhone 14 Pro Max quality with AI
         </p>
       </div>
+
+      {/* Backend Status */}
+      <BackendStatus />
 
       {/* Upload Area */}
       <Card>
@@ -274,7 +308,9 @@ export default function EnhancePage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
 

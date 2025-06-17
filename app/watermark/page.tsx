@@ -10,9 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 // import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Shield, Download, Settings, Zap } from "lucide-react";
-// import { useFileUpload } from "@/lib/local-upload";
-// import { backendClient } from "@/lib/backend-client";
-// import { useSession } from "@/lib/auth-client";
+import { useFileUpload } from "@/lib/local-upload";
+import { backendClient } from "@/lib/backend-client";
+import { useSession } from "@/lib/auth-client";
+import { Navbar } from "@/components/navbar";
+import { BackendStatus } from "@/components/backend-status";
 
 interface WatermarkResult {
   watermarkedUrls?: string[];
@@ -22,7 +24,7 @@ interface WatermarkResult {
 }
 
 export default function WatermarkPage() {
-  // const { data: session } = useSession();
+  const { data: session } = useSession();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [processedCount, setProcessedCount] = useState(0);
@@ -40,14 +42,20 @@ export default function WatermarkPage() {
     color: "white"
   });
 
-  // Mock upload handler
-  const isUploading = false;
-  const startUpload = async (files: File[]) => {
-    const urls = files.map(file => URL.createObjectURL(file));
-    const filenames = files.map(file => file.name);
-    setUploadedFiles(urls);
-    setUploadedFilenames(filenames);
-  };
+  const { startUpload, isUploading } = useFileUpload("bulkWatermarker", {
+    onClientUploadComplete: async (res) => {
+      if (res && res.length > 0) {
+        const base64List = res.map(file => file.base64 || '');
+        const filenames = res.map(file => file.name);
+        setUploadedFiles(base64List);
+        setUploadedFilenames(filenames);
+      }
+    },
+    onUploadError: (error) => {
+      setError(`Upload failed: ${error.message}`);
+      setIsProcessing(false);
+    },
+  });
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -123,7 +131,10 @@ export default function WatermarkPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 py-20">
+        <div className="max-w-6xl mx-auto p-6 space-y-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
           Bulk Photo Watermarking
@@ -132,6 +143,9 @@ export default function WatermarkPage() {
           Add watermarks to multiple photos at once with AI-powered placement
         </p>
       </div>
+
+      {/* Backend Status */}
+      <BackendStatus />
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
@@ -341,7 +355,9 @@ export default function WatermarkPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
 
