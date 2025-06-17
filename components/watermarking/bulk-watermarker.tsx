@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Upload, Shield, Download, Settings, Images, Zap } from "lucide-react";
-import { useUploadThing } from "@/lib/uploadthing";
+// import { useUploadThing } from "@/lib/uploadthing";
 import { backendClient } from "@/lib/backend-client";
 import { useSession } from "@/lib/auth-client";
 
@@ -51,20 +51,22 @@ export function BulkWatermarker() {
     fontSize: 24
   });
 
-  const { startUpload, isUploading } = useUploadThing("bulkWatermarker", {
-    onClientUploadComplete: async (res) => {
-      if (res && res.length > 0) {
-        const urls = res.map(file => file.url);
-        const filenames = res.map(file => file.name);
-        setUploadedFiles(urls);
-        setUploadedFilenames(filenames);
-      }
-    },
-    onUploadError: (error) => {
-      setError(`Upload failed: ${error.message}`);
-      setIsProcessing(false);
-    },
-  });
+  // Temporary mock for UploadThing - replace with actual implementation
+  const [isUploading, setIsUploading] = useState(false);
+  const startUpload = async (files: File[]) => {
+    setIsUploading(true);
+    try {
+      // For now, create temporary URLs for demo
+      const urls = files.map(file => URL.createObjectURL(file));
+      const filenames = files.map(file => file.name);
+      setUploadedFiles(urls);
+      setUploadedFilenames(filenames);
+    } catch (error) {
+      setError("Upload failed");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!session?.user) {

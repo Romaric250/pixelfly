@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, Sparkles, Download, Zap, Image as ImageIcon } from "lucide-react";
-import { useUploadThing } from "@/lib/uploadthing";
+// import { useUploadThing } from "@/lib/uploadthing";
 import { backendClient } from "@/lib/backend-client";
 import { useSession } from "@/lib/auth-client";
 
@@ -27,17 +27,21 @@ export function PhotoEnhancer() {
   const [result, setResult] = useState<EnhancementResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { startUpload, isUploading } = useUploadThing("photoEnhancer", {
-    onClientUploadComplete: async (res) => {
-      if (res && res[0]) {
-        await processEnhancement(res[0].url, res[0].name);
-      }
-    },
-    onUploadError: (error) => {
-      setError(`Upload failed: ${error.message}`);
-      setIsProcessing(false);
-    },
-  });
+  // Temporary mock for UploadThing - replace with actual implementation
+  const [isUploading, setIsUploading] = useState(false);
+  const startUpload = async (files: File[]) => {
+    setIsUploading(true);
+    try {
+      // For now, create a temporary URL for demo
+      const file = files[0];
+      const tempUrl = URL.createObjectURL(file);
+      await processEnhancement(tempUrl, file.name);
+    } catch (error) {
+      setError("Upload failed");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!session?.user) {
