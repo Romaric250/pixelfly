@@ -4,14 +4,16 @@
  */
 
 interface EnhancementRequest {
-  image_url: string;
+  image_url?: string;
+  image_base64?: string;
   user_id: string;
   enhancement_type?: string;
   return_format?: 'url' | 'base64';
 }
 
 interface WatermarkRequest {
-  image_urls: string[];
+  image_urls?: string[];
+  image_base64_list?: string[];
   user_id: string;
   watermark_config?: {
     text?: string;
@@ -185,7 +187,7 @@ class BackendClient {
     request: WatermarkRequest,
     onProgress?: (progress: number, processed: number, total: number) => void
   ): Promise<WatermarkResponse> {
-    const total = request.image_urls.length;
+    const total = (request.image_urls || request.image_base64_list || []).length;
     
     // Simulate progress for now
     if (onProgress) {
