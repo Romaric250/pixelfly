@@ -55,22 +55,34 @@ class PhotoEnhancement(Resource):
             image_url = data['image_url']
             user_id = data.get('user_id', 'anonymous')
             enhancement_type = data.get('enhancement_type', 'auto')
-            
+            return_format = data.get('return_format', 'base64')
+
             logger.info(f"Processing photo enhancement for user {user_id}")
-            
+
             # Process the image
             result = ai_orchestrator.enhance_photo(
                 image_url=image_url,
                 user_id=user_id,
-                enhancement_type=enhancement_type
+                enhancement_type=enhancement_type,
+                return_format=return_format
             )
             
-            return {
-                "success": True,
-                "enhanced_url": result['enhanced_url'],
-                "processing_time": result['processing_time'],
-                "enhancements_applied": result['enhancements_applied']
-            }
+            response = {"success": True}
+
+            if return_format == "base64" and 'enhanced_base64' in result:
+                response.update({
+                    "enhanced_base64": result['enhanced_base64'],
+                    "processing_time": result['processing_time'],
+                    "enhancements_applied": result['enhancements_applied']
+                })
+            else:
+                response.update({
+                    "enhanced_url": result.get('enhanced_url', ''),
+                    "processing_time": result['processing_time'],
+                    "enhancements_applied": result['enhancements_applied']
+                })
+
+            return response
             
         except Exception as e:
             logger.error(f"Photo enhancement error: {str(e)}")
@@ -89,22 +101,34 @@ class BulkWatermarking(Resource):
             image_urls = data['image_urls']
             user_id = data.get('user_id', 'anonymous')
             watermark_config = data.get('watermark_config', {})
-            
+            return_format = data.get('return_format', 'base64')
+
             logger.info(f"Processing bulk watermarking for user {user_id}, {len(image_urls)} images")
-            
+
             # Process the images
             result = ai_orchestrator.bulk_watermark(
                 image_urls=image_urls,
                 user_id=user_id,
-                watermark_config=watermark_config
+                watermark_config=watermark_config,
+                return_format=return_format
             )
             
-            return {
-                "success": True,
-                "watermarked_urls": result['watermarked_urls'],
-                "processing_time": result['processing_time'],
-                "processed_count": result['processed_count']
-            }
+            response = {"success": True}
+
+            if return_format == "base64" and 'watermarked_base64' in result:
+                response.update({
+                    "watermarked_base64": result['watermarked_base64'],
+                    "processing_time": result['processing_time'],
+                    "processed_count": result['processed_count']
+                })
+            else:
+                response.update({
+                    "watermarked_urls": result.get('watermarked_urls', []),
+                    "processing_time": result['processing_time'],
+                    "processed_count": result['processed_count']
+                })
+
+            return response
             
         except Exception as e:
             logger.error(f"Bulk watermarking error: {str(e)}")

@@ -137,13 +137,18 @@ class AIOrchestrator:
             analysis = state["result_data"].get("analysis", {})
             
             # Use the photo enhancement service
+            return_format = state["result_data"].get("return_format", "base64")
             enhanced_result = await self.photo_enhancer.enhance_photo_async(
                 image_url=state["image_url"],
                 enhancement_type=analysis.get("image_type", "auto"),
-                quality_score=analysis.get("quality_score", 0.5)
+                quality_score=analysis.get("quality_score", 0.5),
+                return_format=return_format
             )
             
-            state["result_data"]["enhanced_url"] = enhanced_result["enhanced_url"]
+            if "enhanced_base64" in enhanced_result:
+                state["result_data"]["enhanced_base64"] = enhanced_result["enhanced_base64"]
+            if "enhanced_url" in enhanced_result:
+                state["result_data"]["enhanced_url"] = enhanced_result["enhanced_url"]
             state["result_data"]["enhancements_applied"] = enhanced_result["enhancements_applied"]
             state["processing_status"] = "enhanced"
             
@@ -163,16 +168,22 @@ class AIOrchestrator:
             analysis = state["result_data"].get("analysis", {})
             
             # Use the watermark service
+            return_format = state["result_data"].get("return_format", "base64")
+            watermark_config = state["result_data"].get("watermark_config", {})
             watermark_result = await self.watermark_service.add_watermark_async(
                 image_url=state["image_url"],
                 watermark_config={
-                    "position": analysis.get("watermark_zones", ["bottom_right"])[0],
-                    "opacity": 0.7,
-                    "text": f"© PixelFly User {state['user_id']}"
-                }
+                    "position": watermark_config.get("position", analysis.get("watermark_zones", ["bottom_right"])[0]),
+                    "opacity": watermark_config.get("opacity", 0.7),
+                    "text": watermark_config.get("text", f"© PixelFly User {state['user_id']}")
+                },
+                return_format=return_format
             )
             
-            state["result_data"]["watermarked_url"] = watermark_result["watermarked_url"]
+            if "watermarked_base64" in watermark_result:
+                state["result_data"]["watermarked_base64"] = watermark_result["watermarked_base64"]
+            if "watermarked_url" in watermark_result:
+                state["result_data"]["watermarked_url"] = watermark_result["watermarked_url"]
             state["processing_status"] = "watermarked"
             
             return state
@@ -241,11 +252,11 @@ class AIOrchestrator:
         else:
             return "error"
     
-    def enhance_photo(self, image_url: str, user_id: str, enhancement_type: str = "auto") -> Dict[str, Any]:
+    def enhance_photo(self, image_url: str, user_id: str, enhancement_type: str = "auto", return_format: str = "base64") -> Dict[str, Any]:
         """Synchronous photo enhancement"""
-        return asyncio.run(self.enhance_photo_async(image_url, user_id, enhancement_type))
+        return asyncio.run(self.enhance_photo_async(image_url, user_id, enhancement_type, return_format))
     
-    async def enhance_photo_async(self, image_url: str, user_id: str, enhancement_type: str = "auto") -> Dict[str, Any]:
+    async def enhance_photo_async(self, image_url: str, user_id: str, enhancement_type: str = "auto", return_format: str = "base64") -> Dict[str, Any]:
         """Asynchronous photo enhancement using AI agents"""
         start_time = time.time()
         
@@ -255,7 +266,7 @@ class AIOrchestrator:
             user_id=user_id,
             task_type="enhancement",
             processing_status="started",
-            result_data={"start_time": start_time},
+            result_data={"start_time": start_time, "return_format": return_format},
             error_message=None
         )
         
@@ -267,11 +278,11 @@ class AIOrchestrator:
         
         return final_state["result_data"]
     
-    def bulk_watermark(self, image_urls: List[str], user_id: str, watermark_config: Dict[str, Any]) -> Dict[str, Any]:
+    def bulk_watermark(self, image_urls: List[str], user_id: str, watermark_config: Dict[str, Any], return_format: str = "base64") -> Dict[str, Any]:
         """Synchronous bulk watermarking"""
-        return asyncio.run(self.bulk_watermark_async(image_urls, user_id, watermark_config))
+        return asyncio.run(self.bulk_watermark_async(image_urls, user_id, watermark_config, return_format))
     
-    async def bulk_watermark_async(self, image_urls: List[str], user_id: str, watermark_config: Dict[str, Any]) -> Dict[str, Any]:
+    async def bulk_watermark_async(self, image_urls: List[str], user_id: str, watermark_config: Dict[str, Any], return_format: str = "base64") -> Dict[str, Any]:
         """Asynchronous bulk watermarking using AI agents"""
         start_time = time.time()
         results = []
@@ -285,7 +296,7 @@ class AIOrchestrator:
                     user_id=user_id,
                     task_type="watermarking",
                     processing_status="started",
-                    result_data={"start_time": start_time, "watermark_config": watermark_config},
+                    result_data={"start_time": start_time, "watermark_config": watermark_config, "return_format": return_format},
                     error_message=None
                 )
                 

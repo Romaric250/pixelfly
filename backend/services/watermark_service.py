@@ -79,24 +79,36 @@ class WatermarkService:
         
         # Process images concurrently
         tasks = [
-            self.add_watermark_async(url, watermark_config) 
+            self.add_watermark_async(url, watermark_config, return_format)
             for url in image_urls
         ]
         
         completed_results = await asyncio.gather(*tasks, return_exceptions=True)
         
+        watermarked_urls = []
+        watermarked_base64 = []
+
         for i, result in enumerate(completed_results):
             if isinstance(result, Exception):
                 logger.error(f"Failed to watermark image {i}: {str(result)}")
             else:
-                results.append(result["watermarked_url"])
-        
-        return {
-            "watermarked_urls": results,
+                if return_format == "base64" and "watermarked_base64" in result:
+                    watermarked_base64.append(result["watermarked_base64"])
+                elif "watermarked_url" in result:
+                    watermarked_urls.append(result["watermarked_url"])
+
+        response = {
             "processing_time": time.time() - start_time,
-            "processed_count": len(results),
+            "processed_count": len(watermarked_base64) if return_format == "base64" else len(watermarked_urls),
             "total_requested": len(image_urls)
         }
+
+        if return_format == "base64":
+            response["watermarked_base64"] = watermarked_base64
+        else:
+            response["watermarked_urls"] = watermarked_urls
+
+        return response
     
     async def _download_image(self, image_url: str) -> Image.Image:
         """Download image from URL"""
