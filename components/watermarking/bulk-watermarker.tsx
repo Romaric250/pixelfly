@@ -25,7 +25,9 @@ interface WatermarkConfig {
 
 interface WatermarkResult {
   originalUrls: string[];
-  watermarkedUrls: string[];
+  watermarkedUrls?: string[];
+  watermarkedBase64?: string[];
+  originalFilenames?: string[];
   processingTime: number;
   processedCount: number;
 }
@@ -39,6 +41,7 @@ export function BulkWatermarker() {
   const [result, setResult] = useState<WatermarkResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [uploadedFilenames, setUploadedFilenames] = useState<string[]>([]);
 
   const [watermarkConfig, setWatermarkConfig] = useState<WatermarkConfig>({
     text: "© PixelFly",
@@ -52,7 +55,9 @@ export function BulkWatermarker() {
     onClientUploadComplete: async (res) => {
       if (res && res.length > 0) {
         const urls = res.map(file => file.url);
+        const filenames = res.map(file => file.name);
         setUploadedFiles(urls);
+        setUploadedFilenames(filenames);
       }
     },
     onUploadError: (error) => {
@@ -72,6 +77,7 @@ export function BulkWatermarker() {
     setError(null);
     setResult(null);
     setUploadedFiles([]);
+    setUploadedFilenames([]);
     setTotalCount(acceptedFiles.length);
 
     try {
@@ -101,7 +107,8 @@ export function BulkWatermarker() {
             opacity: watermarkConfig.opacity / 100,
             color: watermarkConfig.color,
             font_size: watermarkConfig.fontSize
-          }
+          },
+          return_format: "base64" // Request base64 for direct download
         },
         (progress, processed, total) => {
           setProgress(progress);
@@ -114,6 +121,8 @@ export function BulkWatermarker() {
         setResult({
           originalUrls: uploadedFiles,
           watermarkedUrls: watermarkResult.watermarked_urls,
+          watermarkedBase64: watermarkResult.watermarked_base64,
+          originalFilenames: uploadedFilenames,
           processingTime: watermarkResult.processing_time,
           processedCount: watermarkResult.processed_count
         });
@@ -139,7 +148,15 @@ export function BulkWatermarker() {
   });
 
   const downloadAll = () => {
-    if (result?.watermarkedUrls) {
+    if (result?.watermarkedBase64) {
+      // Download from base64 data
+      const filenames = result.originalFilenames?.map((name, index) =>
+        `watermarked-${name}` || `watermarked-photo-${index + 1}.jpg`
+      ) || result.watermarkedBase64.map((_, index) => `watermarked-photo-${index + 1}.jpg`);
+
+      backendClient.downloadMultipleBase64Images(result.watermarkedBase64, filenames);
+    } else if (result?.watermarkedUrls) {
+      // Fallback to URL download
       result.watermarkedUrls.forEach((url, index) => {
         const link = document.createElement('a');
         link.href = url;

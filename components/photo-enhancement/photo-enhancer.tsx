@@ -13,7 +13,9 @@ import { useSession } from "@/lib/auth-client";
 
 interface EnhancementResult {
   originalUrl: string;
-  enhancedUrl: string;
+  enhancedUrl?: string;
+  enhancedBase64?: string;
+  originalFilename?: string;
   processingTime: number;
   enhancementsApplied: string[];
 }
@@ -28,7 +30,7 @@ export function PhotoEnhancer() {
   const { startUpload, isUploading } = useUploadThing("photoEnhancer", {
     onClientUploadComplete: async (res) => {
       if (res && res[0]) {
-        await processEnhancement(res[0].url);
+        await processEnhancement(res[0].url, res[0].name);
       }
     },
     onUploadError: (error) => {
@@ -59,7 +61,7 @@ export function PhotoEnhancer() {
     }
   }, [session, startUpload]);
 
-  const processEnhancement = async (imageUrl: string) => {
+  const processEnhancement = async (imageUrl: string, filename?: string) => {
     try {
       setProgress(20);
 
@@ -68,7 +70,8 @@ export function PhotoEnhancer() {
         {
           image_url: imageUrl,
           user_id: session?.user?.id || "anonymous",
-          enhancement_type: "auto"
+          enhancement_type: "auto",
+          return_format: "base64" // Request base64 for direct download
         },
         (progress) => setProgress(progress)
       );
@@ -77,6 +80,8 @@ export function PhotoEnhancer() {
         setResult({
           originalUrl: imageUrl,
           enhancedUrl: enhancementResult.enhanced_url,
+          enhancedBase64: enhancementResult.enhanced_base64,
+          originalFilename: filename || enhancementResult.original_filename,
           processingTime: enhancementResult.processing_time,
           enhancementsApplied: enhancementResult.enhancements_applied
         });
@@ -102,7 +107,14 @@ export function PhotoEnhancer() {
   });
 
   const downloadEnhanced = () => {
-    if (result?.enhancedUrl) {
+    if (result?.enhancedBase64) {
+      // Download from base64 data
+      const filename = result.originalFilename
+        ? `enhanced-${result.originalFilename}`
+        : 'enhanced-photo.jpg';
+      backendClient.downloadBase64Image(result.enhancedBase64, filename);
+    } else if (result?.enhancedUrl) {
+      // Fallback to URL download
       const link = document.createElement('a');
       link.href = result.enhancedUrl;
       link.download = 'enhanced-photo.jpg';
@@ -216,7 +228,7 @@ export function PhotoEnhancer() {
                 <h3 className="font-semibold mb-3 text-purple-700">Enhanced</h3>
                 <div className="relative rounded-lg overflow-hidden bg-gray-100">
                   <img
-                    src={result.enhancedUrl}
+                    src={result.enhancedBase64 ? `data:image/jpeg;base64,${result.enhancedBase64}` : result.enhancedUrl}
                     alt="Enhanced photo"
                     className="w-full h-64 object-cover"
                   />

@@ -7,6 +7,7 @@ interface EnhancementRequest {
   image_url: string;
   user_id: string;
   enhancement_type?: string;
+  return_format?: 'url' | 'base64';
 }
 
 interface WatermarkRequest {
@@ -19,11 +20,14 @@ interface WatermarkRequest {
     color?: string;
     font_size?: number;
   };
+  return_format?: 'url' | 'base64';
 }
 
 interface EnhancementResponse {
   success: boolean;
-  enhanced_url: string;
+  enhanced_url?: string;
+  enhanced_base64?: string;
+  original_filename?: string;
   processing_time: number;
   enhancements_applied: string[];
   error?: string;
@@ -31,7 +35,9 @@ interface EnhancementResponse {
 
 interface WatermarkResponse {
   success: boolean;
-  watermarked_urls: string[];
+  watermarked_urls?: string[];
+  watermarked_base64?: string[];
+  original_filenames?: string[];
   processing_time: number;
   processed_count: number;
   error?: string;
@@ -70,12 +76,18 @@ class BackendClient {
    */
   async enhancePhoto(request: EnhancementRequest): Promise<EnhancementResponse> {
     try {
+      // Default to base64 return format for direct download
+      const enhancedRequest = {
+        ...request,
+        return_format: request.return_format || 'base64'
+      };
+
       const response = await fetch(`${this.baseUrl}/api/enhance`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(request),
+        body: JSON.stringify(enhancedRequest),
       });
 
       if (!response.ok) {
@@ -94,12 +106,18 @@ class BackendClient {
    */
   async bulkWatermark(request: WatermarkRequest): Promise<WatermarkResponse> {
     try {
+      // Default to base64 return format for direct download
+      const enhancedRequest = {
+        ...request,
+        return_format: request.return_format || 'base64'
+      };
+
       const response = await fetch(`${this.baseUrl}/api/watermark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(request),
+        body: JSON.stringify(enhancedRequest),
       });
 
       if (!response.ok) {
@@ -183,6 +201,51 @@ class BackendClient {
     }
 
     return await this.bulkWatermark(request);
+  }
+
+  /**
+   * Download base64 image as file
+   */
+  downloadBase64Image(base64Data: string, filename: string, format: string = 'jpeg') {
+    try {
+      // Remove data URL prefix if present
+      const base64 = base64Data.replace(/^data:image\/[a-z]+;base64,/, '');
+
+      // Convert base64 to blob
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: `image/${format}` });
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download image:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Download multiple base64 images as ZIP (simplified version)
+   */
+  downloadMultipleBase64Images(base64Images: string[], filenames: string[], format: string = 'jpeg') {
+    base64Images.forEach((base64, index) => {
+      const filename = filenames[index] || `image-${index + 1}.${format}`;
+      // Add small delay to prevent browser blocking multiple downloads
+      setTimeout(() => {
+        this.downloadBase64Image(base64, filename, format);
+      }, index * 100);
+    });
   }
 }
 

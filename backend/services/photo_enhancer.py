@@ -27,7 +27,7 @@ class PhotoEnhancementService:
         genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
         self.gemini_model = genai.GenerativeModel('gemini-pro-vision')
     
-    async def enhance_photo_async(self, image_url: str, enhancement_type: str = "auto", quality_score: float = 0.5) -> Dict[str, Any]:
+    async def enhance_photo_async(self, image_url: str, enhancement_type: str = "auto", quality_score: float = 0.5, return_format: str = "base64") -> Dict[str, Any]:
         """
         Asynchronously enhance a photo using AI-guided processing
         """
@@ -43,18 +43,28 @@ class PhotoEnhancementService:
             # Apply enhancements based on analysis
             enhanced_image = await self._apply_enhancements(image, analysis, quality_score)
             
-            # Upload enhanced image (placeholder - will integrate with storage)
-            enhanced_url = await self._upload_enhanced_image(enhanced_image, image_url)
-            
-            processing_time = time.time() - start_time
-            
-            return {
-                "enhanced_url": enhanced_url,
-                "enhancements_applied": analysis.get("recommended_enhancements", []),
-                "processing_time": processing_time,
-                "quality_improvement": analysis.get("quality_improvement", 0.3),
-                "original_analysis": analysis
-            }
+            # Convert enhanced image to base64 or URL based on return_format
+            if return_format == "base64":
+                enhanced_base64 = await self._image_to_base64(enhanced_image)
+                result = {
+                    "enhanced_base64": enhanced_base64,
+                    "enhancements_applied": analysis.get("recommended_enhancements", []),
+                    "processing_time": time.time() - start_time,
+                    "quality_improvement": analysis.get("quality_improvement", 0.3),
+                    "original_analysis": analysis
+                }
+            else:
+                # Upload enhanced image (placeholder - will integrate with storage)
+                enhanced_url = await self._upload_enhanced_image(enhanced_image, image_url)
+                result = {
+                    "enhanced_url": enhanced_url,
+                    "enhancements_applied": analysis.get("recommended_enhancements", []),
+                    "processing_time": time.time() - start_time,
+                    "quality_improvement": analysis.get("quality_improvement", 0.3),
+                    "original_analysis": analysis
+                }
+
+            return result
             
         except Exception as e:
             logger.error(f"Photo enhancement error: {str(e)}")
@@ -264,20 +274,37 @@ class PhotoEnhancementService:
             logger.error(f"Color balance error: {str(e)}")
             return image
     
+    async def _image_to_base64(self, image: Image.Image) -> str:
+        """Convert PIL image to base64 string"""
+        try:
+            img_byte_arr = BytesIO()
+            # Convert to RGB if needed (for JPEG compatibility)
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+            image.save(img_byte_arr, format='JPEG', quality=95)
+            img_byte_arr = img_byte_arr.getvalue()
+
+            import base64
+            base64_string = base64.b64encode(img_byte_arr).decode('utf-8')
+            return base64_string
+        except Exception as e:
+            logger.error(f"Base64 conversion error: {str(e)}")
+            raise e
+
     async def _upload_enhanced_image(self, enhanced_image: Image.Image, original_url: str) -> str:
         """Upload enhanced image and return URL"""
         # TODO: Integrate with actual storage service (UploadThing or Firebase)
         # For now, return a placeholder URL
-        
+
         # In production, this would:
         # 1. Convert PIL image to bytes
         # 2. Upload to storage service
         # 3. Return the public URL
-        
+
         # Placeholder implementation
         filename = f"enhanced_{int(time.time())}.jpg"
         placeholder_url = f"https://storage.pixelfly.com/enhanced/{filename}"
-        
+
         logger.info(f"Enhanced image would be uploaded as: {placeholder_url}")
         return placeholder_url
     

@@ -12,6 +12,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import cv2
 import logging
+from io import BytesIO
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class WatermarkService:
             "center", "top_center", "bottom_center"
         ]
     
-    async def add_watermark_async(self, image_url: str, watermark_config: Dict[str, Any]) -> Dict[str, Any]:
+    async def add_watermark_async(self, image_url: str, watermark_config: Dict[str, Any], return_format: str = "base64") -> Dict[str, Any]:
         """
         Asynchronously add watermark to image with AI-optimized placement
         """
@@ -43,24 +44,33 @@ class WatermarkService:
             
             # Apply watermark
             watermarked_image = await self._apply_watermark(image, watermark_config, placement_analysis)
-            
-            # Upload watermarked image
-            watermarked_url = await self._upload_watermarked_image(watermarked_image, image_url)
-            
-            processing_time = time.time() - start_time
-            
-            return {
-                "watermarked_url": watermarked_url,
-                "watermark_config": watermark_config,
-                "placement_analysis": placement_analysis,
-                "processing_time": processing_time
-            }
+
+            # Return base64 or URL based on return_format
+            if return_format == "base64":
+                watermarked_base64 = await self._image_to_base64(watermarked_image)
+                result = {
+                    "watermarked_base64": watermarked_base64,
+                    "watermark_config": watermark_config,
+                    "placement_analysis": placement_analysis,
+                    "processing_time": time.time() - start_time
+                }
+            else:
+                # Upload watermarked image
+                watermarked_url = await self._upload_watermarked_image(watermarked_image, image_url)
+                result = {
+                    "watermarked_url": watermarked_url,
+                    "watermark_config": watermark_config,
+                    "placement_analysis": placement_analysis,
+                    "processing_time": time.time() - start_time
+                }
+
+            return result
             
         except Exception as e:
             logger.error(f"Watermarking error: {str(e)}")
             raise e
     
-    async def bulk_watermark_async(self, image_urls: List[str], watermark_config: Dict[str, Any]) -> Dict[str, Any]:
+    async def bulk_watermark_async(self, image_urls: List[str], watermark_config: Dict[str, Any], return_format: str = "base64") -> Dict[str, Any]:
         """
         Bulk watermarking with consistent styling
         """
@@ -301,14 +311,31 @@ class WatermarkService:
             logger.error(f"Watermark application error: {str(e)}")
             return image  # Return original if watermarking fails
     
+    async def _image_to_base64(self, image: Image.Image) -> str:
+        """Convert PIL image to base64 string"""
+        try:
+            img_byte_arr = BytesIO()
+            # Convert to RGB if needed (for JPEG compatibility)
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+            image.save(img_byte_arr, format='JPEG', quality=95)
+            img_byte_arr = img_byte_arr.getvalue()
+
+            import base64
+            base64_string = base64.b64encode(img_byte_arr).decode('utf-8')
+            return base64_string
+        except Exception as e:
+            logger.error(f"Base64 conversion error: {str(e)}")
+            raise e
+
     async def _upload_watermarked_image(self, watermarked_image: Image.Image, original_url: str) -> str:
         """Upload watermarked image and return URL"""
         # TODO: Integrate with actual storage service (UploadThing or Firebase)
         # For now, return a placeholder URL
-        
+
         filename = f"watermarked_{int(time.time())}.jpg"
         placeholder_url = f"https://storage.pixelfly.com/watermarked/{filename}"
-        
+
         logger.info(f"Watermarked image would be uploaded as: {placeholder_url}")
         return placeholder_url
     
