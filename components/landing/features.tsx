@@ -42,7 +42,7 @@ export function Features() {
           </h2>
           <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto font-light leading-relaxed">
             Everything you need to transform your photos,
-            <span className="block mt-2 font-medium text-purple-600">nothing you don't.</span>
+            <span className="block mt-2 font-medium text-purple-600">nothing you don&apos;t.</span>
           </p>
         </motion.div>
 

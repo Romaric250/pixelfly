@@ -194,7 +194,7 @@ export function InteractiveDemo() {
               Ready to Transform Your Photos?
             </h3>
             <p className="text-purple-100 mb-6 max-w-2xl mx-auto">
-              Join thousands of users who have already enhanced millions of photos with PixelFly's AI technology.
+              Join thousands of users who have already enhanced millions of photos with PixelFly&apos;s AI technology.
             </p>
             <Button 
               size="lg"

@@ -135,9 +135,9 @@ export function LandingHero() {
                   asChild
                   className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-4 text-lg font-semibold rounded-2xl shadow-xl shadow-purple-200/50 group"
                 >
-                  <Link href="/sign-up" className="flex items-center gap-3">
+                  <Link href="/enhance" className="flex items-center gap-3">
                     <Upload className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                    Try PixelFly Now
+                    Enhance Photos
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
@@ -153,9 +153,9 @@ export function LandingHero() {
                   asChild
                   className="border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300 px-8 py-4 text-lg font-semibold rounded-2xl group"
                 >
-                  <Link href="https://github.com/romaric250/pixelfly" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
+                  <Link href="/watermark" className="flex items-center gap-3">
                     <Star className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                    Star on GitHub
+                    Bulk Watermark
                   </Link>
                 </Button>
               </motion.div>
@@ -309,17 +309,29 @@ export function LandingHero() {
               Ready to Transform Your Photos?
             </h3>
             <p className="text-purple-100 mb-6 max-w-2xl mx-auto">
-              Join thousands of users who have already enhanced millions of photos with PixelFly's AI technology.
+              Join thousands of users who have already enhanced millions of photos with PixelFly&apos;s AI technology.
             </p>
-            <Button 
-              size="lg"
-              asChild
-              className="bg-white text-purple-600 hover:bg-purple-50 font-semibold px-8 py-3 rounded-2xl"
-            >
-              <Link href="/sign-up">
-                Start Enhancing Now
-              </Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                asChild
+                className="bg-white text-purple-600 hover:bg-purple-50 font-semibold px-8 py-3 rounded-2xl"
+              >
+                <Link href="/enhance">
+                  Start Enhancing Now
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+                className="border-white/30 text-white hover:bg-white/10 font-semibold px-8 py-3 rounded-2xl"
+              >
+                <Link href="/watermark">
+                  Bulk Watermark
+                </Link>
+              </Button>
+            </div>
           </div>
         </motion.div>
       </div>

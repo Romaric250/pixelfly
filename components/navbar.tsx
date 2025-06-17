@@ -65,6 +65,8 @@ export function Navbar() {
 
             {/* Center navigation with unique styling */}
             <div className="hidden md:flex items-center space-x-1">
+              <NavLink href="/enhance">Enhance</NavLink>
+              <NavLink href="/watermark">Watermark</NavLink>
               <NavLink href="#features">Features</NavLink>
               <NavLink href="#about">About</NavLink>
               <div className="w-px h-6 bg-purple-200 mx-4" />
@@ -123,6 +125,12 @@ export function Navbar() {
       >
         <div className="mx-6 mb-4 bg-white/80 backdrop-blur-md rounded-2xl border border-purple-100/50 shadow-lg p-6">
           <div className="space-y-4">
+            <Link href="/enhance" className="block text-gray-700 hover:text-purple-600 font-medium transition-colors">
+              Enhance Photos
+            </Link>
+            <Link href="/watermark" className="block text-gray-700 hover:text-purple-600 font-medium transition-colors">
+              Bulk Watermark
+            </Link>
             <Link href="#features" className="block text-gray-700 hover:text-purple-600 font-medium transition-colors">
               Features
             </Link>
