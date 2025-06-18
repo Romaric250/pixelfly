@@ -29,24 +29,9 @@ export default function EnhancePage() {
   const [result, setResult] = useState<EnhancementResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { startUpload, isUploading } = useFileUpload("photoEnhancer", {
-    onClientUploadComplete: async (res) => {
-      if (res && res[0]) {
-        await processEnhancement(res[0].base64 || res[0].url, res[0].name);
-      }
-    },
-    onUploadError: (error) => {
-      setError(`Upload failed: ${error.message}`);
-      setIsProcessing(false);
-    },
-  });
+  // Removed UploadThing dependency - processing files directly
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (!session?.user) {
-      setError("Please sign in to enhance photos");
-      return;
-    }
-
     if (acceptedFiles.length === 0) return;
 
     setError(null);
@@ -55,13 +40,33 @@ export default function EnhancePage() {
     setProgress(0);
 
     try {
-      // Upload file
-      await startUpload(acceptedFiles);
+      const file = acceptedFiles[0];
+      console.log('Processing file directly:', file.name, file.size);
+
+      // Convert file to base64 directly
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const base64Data = e.target?.result as string;
+          console.log('File converted to base64, length:', base64Data.length);
+          await processEnhancement(base64Data, file.name);
+        } catch (error) {
+          console.error('Error processing file:', error);
+          setError("Failed to process photo");
+          setIsProcessing(false);
+        }
+      };
+      reader.onerror = () => {
+        setError("Failed to read photo file");
+        setIsProcessing(false);
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
+      console.error('Error in onDrop:', error);
       setError("Failed to upload photo");
       setIsProcessing(false);
     }
-  }, [session, startUpload]);
+  }, []);
 
   const processEnhancement = async (imageData: string, filename?: string) => {
     try {
@@ -69,7 +74,7 @@ export default function EnhancePage() {
 
       // Test backend connection first
       console.log('Testing backend connection...');
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
       console.log('Backend URL:', backendUrl);
 
       try {
@@ -81,7 +86,7 @@ export default function EnhancePage() {
         }
       } catch (healthError) {
         console.error('Health check failed:', healthError);
-        throw new Error('Backend is not accessible. Please make sure it\'s running on port 5000.');
+        throw new Error('Backend is not accessible. Please make sure it\'s running on port 5001.');
       }
 
       // Determine if we have base64 or URL
@@ -169,7 +174,7 @@ export default function EnhancePage() {
     },
     maxFiles: 1,
     maxSize: 8 * 1024 * 1024, // 8MB
-    disabled: isProcessing || isUploading
+    disabled: isProcessing
   });
 
   const downloadEnhanced = () => {
@@ -237,7 +242,7 @@ export default function EnhancePage() {
               isDragActive
                 ? "border-purple-500 bg-purple-50"
                 : "border-gray-300 hover:border-purple-400 hover:bg-gray-50"
-            } ${isProcessing || isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+            } ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             <input {...getInputProps()} />
 
@@ -263,14 +268,14 @@ export default function EnhancePage() {
       </Card>
 
       {/* Processing Progress */}
-      {(isProcessing || isUploading) && (
+      {isProcessing && (
         <Card>
           <CardContent className="p-6">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <Sparkles className="w-5 h-5 text-purple-600 animate-spin" />
                 <span className="font-medium">
-                  {isUploading ? "Uploading photo..." : "Enhancing with AI..."}
+Enhancing with AI...
                 </span>
               </div>
               <Progress value={progress} className="w-full" />
