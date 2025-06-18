@@ -24,8 +24,16 @@ class PhotoEnhancementService:
     
     def __init__(self):
         # Configure Gemini for image analysis
-        genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
-        self.gemini_model = genai.GenerativeModel('gemini-pro-vision')
+        api_key = os.getenv('GOOGLE_API_KEY')
+        if api_key:
+            genai.configure(api_key=api_key)
+            self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+            self.gemini_available = True
+            logger.info("Gemini API configured successfully")
+        else:
+            self.gemini_model = None
+            self.gemini_available = False
+            logger.warning("Gemini API key not found, using fallback analysis")
     
     async def enhance_photo_async(self, image_url: str = None, image_base64: str = None, enhancement_type: str = "auto", quality_score: float = 0.5, return_format: str = "base64") -> Dict[str, Any]:
         """
@@ -104,40 +112,73 @@ class PhotoEnhancementService:
         Use Gemini to analyze the image and recommend enhancements
         """
         try:
-            # Convert PIL image to format Gemini can process
-            img_byte_arr = BytesIO()
-            image.save(img_byte_arr, format='JPEG')
-            img_byte_arr = img_byte_arr.getvalue()
-            
-            prompt = f"""
-            Analyze this image for quality enhancement. The requested enhancement type is: {enhancement_type}
-            
-            Please identify:
-            1. Current image quality issues (blur, noise, low contrast, poor lighting, etc.)
-            2. Subject type (portrait, landscape, food, product, etc.)
-            3. Recommended enhancement techniques
-            4. Optimal enhancement parameters
-            5. Expected quality improvement percentage
-            
-            Respond in JSON format with specific recommendations.
-            """
-            
-            # For now, simulate Gemini analysis (replace with actual API call when ready)
-            # TODO: Implement actual Gemini API call
-            simulated_analysis = {
-                "image_type": self._detect_image_type(image),
-                "quality_issues": self._detect_quality_issues(image),
-                "recommended_enhancements": self._get_recommended_enhancements(image, enhancement_type),
-                "enhancement_parameters": self._get_enhancement_parameters(image),
-                "quality_improvement": 0.35,
-                "confidence": 0.85
-            }
-            
-            return simulated_analysis
-            
-        except Exception as e:
-            logger.error(f"Gemini analysis error: {str(e)}")
+            if self.gemini_available:
+                # Convert PIL image to format Gemini can process
+                img_byte_arr = BytesIO()
+                image.save(img_byte_arr, format='JPEG')
+                img_byte_arr.seek(0)
+
+                prompt = f"""
+                Analyze this image for quality enhancement. The requested enhancement type is: {enhancement_type}
+
+                Please identify and respond in JSON format:
+                {{
+                    "image_type": "portrait/landscape/food/product/general",
+                    "quality_issues": ["blur", "low_contrast", "noise", "low_light", "overexposed"],
+                    "recommended_enhancements": ["sharpening", "contrast_enhancement", "noise_reduction", "brightness_adjustment", "color_saturation"],
+                    "enhancement_parameters": {{
+                        "sharpness": 1.0-2.0,
+                        "contrast": 1.0-2.0,
+                        "brightness": 0.8-1.5,
+                        "saturation": 0.8-1.5
+                    }},
+                    "quality_improvement": 0.0-1.0,
+                    "confidence": 0.0-1.0
+                }}
+
+                Focus on realistic improvements that would enhance photo quality.
+                """
+
+                try:
+                    # Use Gemini API for real analysis
+                    response = self.gemini_model.generate_content([prompt, image])
+
+                    # Try to parse JSON response
+                    import json
+                    analysis_text = response.text.strip()
+
+                    # Clean up response if it has markdown formatting
+                    if "```json" in analysis_text:
+                        analysis_text = analysis_text.split("```json")[1].split("```")[0].strip()
+                    elif "```" in analysis_text:
+                        analysis_text = analysis_text.split("```")[1].strip()
+
+                    gemini_analysis = json.loads(analysis_text)
+
+                    # Validate and enhance the response
+                    validated_analysis = {
+                        "image_type": gemini_analysis.get("image_type", self._detect_image_type(image)),
+                        "quality_issues": gemini_analysis.get("quality_issues", self._detect_quality_issues(image)),
+                        "recommended_enhancements": gemini_analysis.get("recommended_enhancements", self._get_recommended_enhancements(image, enhancement_type)),
+                        "enhancement_parameters": gemini_analysis.get("enhancement_parameters", self._get_enhancement_parameters(image)),
+                        "quality_improvement": float(gemini_analysis.get("quality_improvement", 0.35)),
+                        "confidence": float(gemini_analysis.get("confidence", 0.85)),
+                        "gemini_analysis": True
+                    }
+
+                    logger.info(f"Gemini analysis successful: {validated_analysis['image_type']}, {len(validated_analysis['quality_issues'])} issues found")
+                    return validated_analysis
+
+                except Exception as gemini_error:
+                    logger.error(f"Gemini API error: {str(gemini_error)}")
+                    # Fall through to traditional analysis
+
             # Fallback to traditional analysis
+            logger.info("Using traditional image analysis")
+            return self._fallback_analysis(image, enhancement_type)
+
+        except Exception as e:
+            logger.error(f"Image analysis error: {str(e)}")
             return self._fallback_analysis(image, enhancement_type)
     
     def _detect_image_type(self, image: Image.Image) -> str:
