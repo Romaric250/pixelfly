@@ -86,52 +86,79 @@ def add_watermark_simple(image_base64, watermark_text="© PixelFly"):
 
 @app.route('/health', methods=['GET'])
 def health_check():
+    logger.info("Health check requested")
     return jsonify({
         "status": "healthy",
         "timestamp": time.time(),
         "service": "PixelFly Test Backend"
     })
 
+@app.route('/test', methods=['GET', 'POST'])
+def test_endpoint():
+    logger.info(f"Test endpoint called with method: {request.method}")
+    if request.method == 'POST':
+        data = request.get_json()
+        logger.info(f"Test POST data: {data}")
+        return jsonify({"message": "Test POST successful", "received": data})
+    else:
+        return jsonify({"message": "Test GET successful"})
+
 @app.route('/api/enhance', methods=['POST', 'OPTIONS'])
 def enhance_photo():
+    logger.info(f"Enhancement endpoint called with method: {request.method}")
+
     if request.method == 'OPTIONS':
+        logger.info("Handling OPTIONS request")
         return '', 200
-    
+
     try:
+        logger.info("Getting JSON data from request")
         data = request.get_json()
-        logger.info(f"Received enhancement request: {data.keys() if data else 'No data'}")
-        
+        logger.info(f"Received enhancement request with keys: {list(data.keys()) if data else 'No data'}")
+
         # Validate input
         if not data:
-            return jsonify({"error": "No data provided"}), 400
-        
+            logger.error("No data provided in request")
+            return jsonify({"success": False, "error": "No data provided"}), 400
+
         image_base64 = data.get('image_base64')
         image_url = data.get('image_url')
         user_id = data.get('user_id', 'anonymous')
-        
+
+        logger.info(f"Request details - user_id: {user_id}, has_image_base64: {bool(image_base64)}, has_image_url: {bool(image_url)}")
+
+        if image_base64:
+            logger.info(f"Image base64 length: {len(image_base64)}")
+
         if not image_base64 and not image_url:
-            return jsonify({"error": "Either image_base64 or image_url is required"}), 400
-        
+            logger.error("Neither image_base64 nor image_url provided")
+            return jsonify({"success": False, "error": "Either image_base64 or image_url is required"}), 400
+
         logger.info(f"Processing enhancement for user {user_id}")
 
         # Process the image
         if image_base64:
-            logger.info("Enhancing image with PIL filters")
+            logger.info("Starting image enhancement with PIL filters")
             enhanced_base64 = enhance_image_simple(image_base64)
+            logger.info(f"Enhancement completed, result length: {len(enhanced_base64)}")
         else:
             # For URL, create a placeholder base64
+            logger.info("Using placeholder for URL-based image")
             enhanced_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-        
-        return jsonify({
+
+        result = {
             "success": True,
             "enhanced_base64": enhanced_base64,
             "processing_time": 1.0,
             "enhancements_applied": ["brightness_enhancement", "contrast_improvement", "noise_reduction"]
-        })
-        
+        }
+
+        logger.info("Sending successful response")
+        return jsonify(result)
+
     except Exception as e:
-        logger.error(f"Enhancement error: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Enhancement error: {str(e)}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/watermark', methods=['POST', 'OPTIONS'])
 def watermark_photos():
@@ -189,5 +216,7 @@ def index():
     })
 
 if __name__ == '__main__':
-    logger.info("Starting PixelFly Test Backend on port 5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = 5001  # Use different port to avoid conflicts
+    logger.info(f"Starting PixelFly Test Backend on port {port}")
+    print(f"Starting PixelFly Test Backend on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=True)
