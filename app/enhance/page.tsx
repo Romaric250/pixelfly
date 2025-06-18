@@ -67,33 +67,90 @@ export default function EnhancePage() {
     try {
       setProgress(20);
 
+      // Test backend connection first
+      console.log('Testing backend connection...');
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      console.log('Backend URL:', backendUrl);
+
+      try {
+        const healthResponse = await fetch(`${backendUrl}/health`);
+        console.log('Health check response:', healthResponse.status);
+        if (healthResponse.ok) {
+          const healthData = await healthResponse.json();
+          console.log('Health check data:', healthData);
+        }
+      } catch (healthError) {
+        console.error('Health check failed:', healthError);
+        throw new Error('Backend is not accessible. Please make sure it\'s running on port 5000.');
+      }
+
       // Determine if we have base64 or URL
       const isBase64 = imageData.startsWith('data:');
+      let base64Data = '';
+
+      if (isBase64) {
+        base64Data = imageData.split(',')[1];
+      } else {
+        // Convert blob URL to base64
+        try {
+          const response = await fetch(imageData);
+          const blob = await response.blob();
+          const reader = new FileReader();
+          base64Data = await new Promise((resolve) => {
+            reader.onload = () => {
+              const result = reader.result as string;
+              resolve(result.split(',')[1]);
+            };
+            reader.readAsDataURL(blob);
+          });
+        } catch (e) {
+          throw new Error("Failed to process image");
+        }
+      }
+
       const request = {
         user_id: session?.user?.id || "anonymous",
         enhancement_type: "auto",
         return_format: "base64" as const,
-        ...(isBase64
-          ? { image_base64: imageData.split(',')[1] }
-          : { image_url: imageData }
-        )
+        image_base64: base64Data
       };
+
+      setProgress(50);
+
+      console.log('Calling backend with request:', {
+        ...request,
+        image_base64: request.image_base64 ? `[${request.image_base64.length} chars]` : 'none'
+      });
 
       // Call backend for AI enhancement
       const enhancementResult = await backendClient.enhancePhotoWithProgress(
         request,
-        (progress) => setProgress(progress)
+        (progress) => {
+          console.log('Progress update:', progress);
+          setProgress(progress);
+        }
       );
 
+      console.log('Enhancement result:', enhancementResult);
+
       if (enhancementResult.success) {
-        setResult({
-          originalUrl: imageData,
+        const resultData = {
+          originalUrl: `data:image/jpeg;base64,${base64Data}`,
           enhancedUrl: enhancementResult.enhanced_url,
           enhancedBase64: enhancementResult.enhanced_base64,
-          originalFilename: filename || enhancementResult.original_filename,
+          originalFilename: filename || 'photo.jpg',
           processingTime: enhancementResult.processing_time,
           enhancementsApplied: enhancementResult.enhancements_applied
+        };
+
+        console.log('Setting result:', {
+          originalUrlLength: resultData.originalUrl.length,
+          enhancedBase64Length: resultData.enhancedBase64?.length,
+          enhancedUrl: resultData.enhancedUrl,
+          filename: resultData.originalFilename
         });
+
+        setResult(resultData);
       } else {
         throw new Error(enhancementResult.error || "Enhancement failed");
       }
@@ -121,7 +178,30 @@ export default function EnhancePage() {
       const filename = result.originalFilename
         ? `enhanced-${result.originalFilename}`
         : 'enhanced-photo.jpg';
-      backendClient.downloadBase64Image(result.enhancedBase64, filename);
+
+      try {
+        // Create download link
+        const base64 = result.enhancedBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+        const byteCharacters = atob(base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Download failed:', error);
+        setError('Failed to download enhanced image');
+      }
     } else if (result?.enhancedUrl) {
       // Fallback to URL download
       const link = document.createElement('a');
@@ -235,6 +315,11 @@ export default function EnhancePage() {
                     src={result.originalUrl}
                     alt="Original photo"
                     className="w-full h-64 object-cover"
+                    onError={(e) => {
+                      console.error('Failed to load original image');
+                      e.currentTarget.style.display = 'none';
+                    }}
+                    onLoad={() => console.log('Original image loaded successfully')}
                   />
                 </div>
               </div>
@@ -246,6 +331,12 @@ export default function EnhancePage() {
                     src={result.enhancedBase64 ? `data:image/jpeg;base64,${result.enhancedBase64}` : result.enhancedUrl}
                     alt="Enhanced photo"
                     className="w-full h-64 object-cover"
+                    onError={(e) => {
+                      console.error('Failed to load enhanced image');
+                      console.log('Enhanced base64 length:', result.enhancedBase64?.length);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                    onLoad={() => console.log('Enhanced image loaded successfully')}
                   />
                   <div className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium">
                     AI Enhanced

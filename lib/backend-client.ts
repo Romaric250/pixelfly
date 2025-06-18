@@ -84,6 +84,12 @@ class BackendClient {
         return_format: request.return_format || 'base64'
       };
 
+      console.log('Sending enhancement request to:', `${this.baseUrl}/api/enhance`);
+      console.log('Request payload:', {
+        ...enhancedRequest,
+        image_base64: enhancedRequest.image_base64 ? `[${enhancedRequest.image_base64.length} chars]` : 'none'
+      });
+
       const response = await fetch(`${this.baseUrl}/api/enhance`, {
         method: 'POST',
         headers: {
@@ -92,11 +98,23 @@ class BackendClient {
         body: JSON.stringify(enhancedRequest),
       });
 
+      console.log('Backend response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`Backend error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Backend error response:', errorText);
+        throw new Error(`Backend error: ${response.status} - ${errorText}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('Backend response:', {
+        success: result.success,
+        enhanced_base64_length: result.enhanced_base64?.length,
+        processing_time: result.processing_time,
+        enhancements_applied: result.enhancements_applied
+      });
+
+      return result;
     } catch (error) {
       console.error('Photo enhancement failed:', error);
       throw error;
