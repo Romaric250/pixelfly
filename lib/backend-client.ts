@@ -56,7 +56,7 @@ class BackendClient {
 
   constructor() {
     // Use environment variable or default to localhost
-    this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
   }
 
   /**
