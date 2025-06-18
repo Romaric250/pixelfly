@@ -136,13 +136,25 @@ export default function EnhancePage() {
         }
       );
 
-      console.log('Enhancement result:', enhancementResult);
+      console.log('Enhancement result:', {
+        success: enhancementResult.success,
+        enhanced_base64_length: enhancementResult.enhanced_base64?.length,
+        processing_time: enhancementResult.processing_time,
+        enhancements_applied: enhancementResult.enhancements_applied
+      });
 
       if (enhancementResult.success) {
+        // Ensure enhanced_base64 doesn't have data URL prefix
+        let enhancedBase64 = enhancementResult.enhanced_base64;
+        if (enhancedBase64 && enhancedBase64.startsWith('data:')) {
+          enhancedBase64 = enhancedBase64.split(',')[1];
+          console.log('Removed data URL prefix from enhanced image');
+        }
+
         const resultData = {
           originalUrl: `data:image/jpeg;base64,${base64Data}`,
           enhancedUrl: enhancementResult.enhanced_url,
-          enhancedBase64: enhancementResult.enhanced_base64,
+          enhancedBase64: enhancedBase64,
           originalFilename: filename || 'photo.jpg',
           processingTime: enhancementResult.processing_time,
           enhancementsApplied: enhancementResult.enhancements_applied
@@ -152,7 +164,8 @@ export default function EnhancePage() {
           originalUrlLength: resultData.originalUrl.length,
           enhancedBase64Length: resultData.enhancedBase64?.length,
           enhancedUrl: resultData.enhancedUrl,
-          filename: resultData.originalFilename
+          filename: resultData.originalFilename,
+          originalBase64Length: base64Data.length
         });
 
         setResult(resultData);
@@ -185,8 +198,17 @@ export default function EnhancePage() {
         : 'enhanced-photo.jpg';
 
       try {
-        // Create download link
-        const base64 = result.enhancedBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+        console.log('Starting download for:', filename);
+        console.log('Enhanced base64 length:', result.enhancedBase64.length);
+
+        // Ensure we have clean base64 data
+        let base64 = result.enhancedBase64;
+        if (base64.startsWith('data:')) {
+          base64 = base64.split(',')[1];
+          console.log('Removed data URL prefix, new length:', base64.length);
+        }
+
+        // Convert base64 to blob
         const byteCharacters = atob(base64);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
@@ -194,6 +216,8 @@ export default function EnhancePage() {
         }
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+        console.log('Created blob with size:', blob.size, 'bytes');
 
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -203,6 +227,8 @@ export default function EnhancePage() {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+
+        console.log('Download initiated successfully');
       } catch (error) {
         console.error('Download failed:', error);
         setError('Failed to download enhanced image');
@@ -314,8 +340,11 @@ Enhancing with AI...
             {/* Before/After Comparison */}
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h3 className="font-semibold mb-3 text-gray-700">Original</h3>
-                <div className="relative rounded-lg overflow-hidden bg-gray-100">
+                <h3 className="font-semibold mb-3 text-gray-700 flex items-center gap-2">
+                  Original
+                  <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Before</span>
+                </h3>
+                <div className="relative rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200">
                   <img
                     src={result.originalUrl}
                     alt="Original photo"
@@ -330,8 +359,11 @@ Enhancing with AI...
               </div>
 
               <div>
-                <h3 className="font-semibold mb-3 text-purple-700">Enhanced</h3>
-                <div className="relative rounded-lg overflow-hidden bg-gray-100">
+                <h3 className="font-semibold mb-3 text-purple-700 flex items-center gap-2">
+                  Enhanced
+                  <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">After AI</span>
+                </h3>
+                <div className="relative rounded-lg overflow-hidden bg-gray-100 border-2 border-purple-200">
                   <img
                     src={result.enhancedBase64 ? `data:image/jpeg;base64,${result.enhancedBase64}` : result.enhancedUrl}
                     alt="Enhanced photo"
@@ -339,12 +371,19 @@ Enhancing with AI...
                     onError={(e) => {
                       console.error('Failed to load enhanced image');
                       console.log('Enhanced base64 length:', result.enhancedBase64?.length);
+                      console.log('Enhanced image src preview:', result.enhancedBase64 ? `data:image/jpeg;base64,${result.enhancedBase64.substring(0, 50)}...` : result.enhancedUrl);
                       e.currentTarget.style.display = 'none';
                     }}
-                    onLoad={() => console.log('Enhanced image loaded successfully')}
+                    onLoad={() => {
+                      console.log('Enhanced image loaded successfully');
+                      console.log('Enhanced image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+                    }}
                   />
                   <div className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium">
-                    AI Enhanced
+                    ✨ AI Enhanced
+                  </div>
+                  <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-medium">
+                    Enhanced Quality
                   </div>
                 </div>
               </div>
