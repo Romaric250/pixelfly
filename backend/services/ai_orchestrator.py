@@ -138,8 +138,10 @@ class AIOrchestrator:
             
             # Use the photo enhancement service
             return_format = state["result_data"].get("return_format", "base64")
+            image_base64 = state["result_data"].get("image_base64")
             enhanced_result = await self.photo_enhancer.enhance_photo_async(
-                image_url=state["image_url"],
+                image_url=state["image_url"] if not image_base64 else None,
+                image_base64=image_base64,
                 enhancement_type=analysis.get("image_type", "auto"),
                 quality_score=analysis.get("quality_score", 0.5),
                 return_format=return_format
@@ -252,21 +254,21 @@ class AIOrchestrator:
         else:
             return "error"
     
-    def enhance_photo(self, image_url: str, user_id: str, enhancement_type: str = "auto", return_format: str = "base64") -> Dict[str, Any]:
+    def enhance_photo(self, image_url: str = None, image_base64: str = None, user_id: str = "anonymous", enhancement_type: str = "auto", return_format: str = "base64") -> Dict[str, Any]:
         """Synchronous photo enhancement"""
-        return asyncio.run(self.enhance_photo_async(image_url, user_id, enhancement_type, return_format))
+        return asyncio.run(self.enhance_photo_async(image_url, image_base64, user_id, enhancement_type, return_format))
     
-    async def enhance_photo_async(self, image_url: str, user_id: str, enhancement_type: str = "auto", return_format: str = "base64") -> Dict[str, Any]:
+    async def enhance_photo_async(self, image_url: str = None, image_base64: str = None, user_id: str = "anonymous", enhancement_type: str = "auto", return_format: str = "base64") -> Dict[str, Any]:
         """Asynchronous photo enhancement using AI agents"""
         start_time = time.time()
         
         initial_state = AgentState(
             messages=[],
-            image_url=image_url,
+            image_url=image_url or f"data:image/jpeg;base64,{image_base64}" if image_base64 else None,
             user_id=user_id,
             task_type="enhancement",
             processing_status="started",
-            result_data={"start_time": start_time, "return_format": return_format},
+            result_data={"start_time": start_time, "return_format": return_format, "image_base64": image_base64},
             error_message=None
         )
         

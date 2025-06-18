@@ -27,15 +27,20 @@ class PhotoEnhancementService:
         genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
         self.gemini_model = genai.GenerativeModel('gemini-pro-vision')
     
-    async def enhance_photo_async(self, image_url: str, enhancement_type: str = "auto", quality_score: float = 0.5, return_format: str = "base64") -> Dict[str, Any]:
+    async def enhance_photo_async(self, image_url: str = None, image_base64: str = None, enhancement_type: str = "auto", quality_score: float = 0.5, return_format: str = "base64") -> Dict[str, Any]:
         """
         Asynchronously enhance a photo using AI-guided processing
         """
         start_time = time.time()
         
         try:
-            # Download the image
-            image = await self._download_image(image_url)
+            # Get the image from URL or base64
+            if image_base64:
+                image = await self._decode_base64_image(image_base64)
+            elif image_url:
+                image = await self._download_image(image_url)
+            else:
+                raise ValueError("Either image_url or image_base64 must be provided")
             
             # Analyze image with Gemini
             analysis = await self._analyze_image_with_gemini(image, enhancement_type)
@@ -70,6 +75,20 @@ class PhotoEnhancementService:
             logger.error(f"Photo enhancement error: {str(e)}")
             raise e
     
+    async def _decode_base64_image(self, image_base64: str) -> Image.Image:
+        """Decode base64 image data"""
+        try:
+            import base64
+            # Remove data URL prefix if present
+            if ',' in image_base64:
+                image_base64 = image_base64.split(',')[1]
+
+            image_data = base64.b64decode(image_base64)
+            return Image.open(BytesIO(image_data))
+        except Exception as e:
+            logger.error(f"Failed to decode base64 image: {str(e)}")
+            raise e
+
     async def _download_image(self, image_url: str) -> Image.Image:
         """Download image from URL"""
         try:

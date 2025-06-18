@@ -49,10 +49,11 @@ class PhotoEnhancement(Resource):
             data = request.get_json()
             
             # Validate required fields
-            if not data or 'image_url' not in data:
-                return {"error": "image_url is required"}, 400
-            
-            image_url = data['image_url']
+            if not data or ('image_url' not in data and 'image_base64' not in data):
+                return {"error": "Either image_url or image_base64 is required"}, 400
+
+            image_url = data.get('image_url')
+            image_base64 = data.get('image_base64')
             user_id = data.get('user_id', 'anonymous')
             enhancement_type = data.get('enhancement_type', 'auto')
             return_format = data.get('return_format', 'base64')
@@ -62,6 +63,7 @@ class PhotoEnhancement(Resource):
             # Process the image
             result = ai_orchestrator.enhance_photo(
                 image_url=image_url,
+                image_base64=image_base64,
                 user_id=user_id,
                 enhancement_type=enhancement_type,
                 return_format=return_format
