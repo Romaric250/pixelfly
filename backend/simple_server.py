@@ -209,57 +209,144 @@ def traditional_placement(image, position, size):
     else:
         return (w-180, h-80, w-20, h-20)
 
-def apply_watermark_style(overlay, text, position, style, opacity, size):
-    """Apply revolutionary watermark styles"""
+def apply_watermark_style(overlay, text, position, style, opacity, size, color="white"):
+    """Apply revolutionary watermark styles with proper settings"""
 
     draw = ImageDraw.Draw(overlay)
     x1, y1, x2, y2 = position
 
+    print(f"🎨 Applying style: {style}, opacity: {opacity}, size: {size}, color: {color}")
+
     # Calculate font size based on size setting
     if size == 'small':
-        font_size = 16
+        font_size = 14
     elif size == 'medium':
-        font_size = 24
+        font_size = 20
     elif size == 'large':
-        font_size = 32
-    else:  # adaptive
-        font_size = min(24, max(16, (x2-x1)//8))
+        font_size = 28
+    elif size == 'adaptive':
+        # Adaptive sizing based on image and text
+        available_width = x2 - x1
+        available_height = y2 - y1
+        font_size = min(available_width // len(text), available_height // 2, 24)
+        font_size = max(font_size, 12)  # Minimum size
+    else:
+        font_size = 20  # Default
+
+    print(f"📏 Calculated font size: {font_size}")
 
     try:
-        # Try to use a nice font, fallback to default
-        font = ImageFont.truetype("arial.ttf", font_size)
-    except:
+        # Try to use system fonts
+        import platform
+        system = platform.system()
+        if system == "Windows":
+            font_paths = ["arial.ttf", "calibri.ttf", "C:/Windows/Fonts/arial.ttf"]
+        elif system == "Darwin":  # macOS
+            font_paths = ["/System/Library/Fonts/Arial.ttf", "/Library/Fonts/Arial.ttf"]
+        else:  # Linux
+            font_paths = ["/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]
+
+        font = None
+        for font_path in font_paths:
+            try:
+                font = ImageFont.truetype(font_path, font_size)
+                break
+            except:
+                continue
+
+        if font is None:
+            font = ImageFont.load_default()
+            print("⚠️ Using default font")
+        else:
+            print(f"✅ Using font: {font_path}")
+
+    except Exception as e:
         font = ImageFont.load_default()
+        print(f"⚠️ Font loading failed, using default: {e}")
 
     # Calculate text position
-    text_bbox = draw.textbbox((0, 0), text, font=font)
-    text_width = text_bbox[2] - text_bbox[0]
-    text_height = text_bbox[3] - text_bbox[1]
+    try:
+        text_bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+    except:
+        # Fallback for older PIL versions
+        text_width, text_height = draw.textsize(text, font=font)
 
     text_x = x1 + (x2 - x1 - text_width) // 2
     text_y = y1 + (y2 - y1 - text_height) // 2
 
-    # Apply different styles
+    # Ensure text fits within bounds
+    text_x = max(x1, min(text_x, x2 - text_width))
+    text_y = max(y1, min(text_y, y2 - text_height))
+
+    print(f"📍 Text position: ({text_x}, {text_y}), size: {text_width}x{text_height}")
+
+    # Convert color name to RGB
+    color_map = {
+        "white": (255, 255, 255),
+        "black": (0, 0, 0),
+        "red": (255, 0, 0),
+        "blue": (0, 0, 255),
+        "green": (0, 255, 0),
+        "yellow": (255, 255, 0),
+        "purple": (128, 0, 128),
+        "orange": (255, 165, 0)
+    }
+
+    base_color = color_map.get(color.lower(), (255, 255, 255))
     alpha = int(255 * opacity)
 
+    print(f"🎨 Using color: {base_color} with alpha: {alpha}")
+
+    # Apply different styles with proper settings
     if style == 'modern_glass':
-        # Glass effect with shadow
-        draw.text((text_x+2, text_y+2), text, fill=(0, 0, 0, alpha//3), font=font)  # Shadow
-        draw.text((text_x, text_y), text, fill=(255, 255, 255, alpha), font=font)   # Main text
+        # Glass effect with shadow and transparency
+        shadow_alpha = alpha // 4
+        draw.text((text_x+2, text_y+2), text, fill=(*base_color, shadow_alpha), font=font)  # Shadow
+        draw.text((text_x+1, text_y+1), text, fill=(200, 200, 200, alpha//2), font=font)   # Highlight
+        draw.text((text_x, text_y), text, fill=(*base_color, alpha), font=font)   # Main text
+
     elif style == 'neon_glow':
-        # Neon glow effect
-        for offset in range(3, 0, -1):
-            glow_alpha = alpha // (offset * 2)
-            draw.text((text_x-offset, text_y-offset), text, fill=(0, 255, 255, glow_alpha), font=font)
-            draw.text((text_x+offset, text_y+offset), text, fill=(0, 255, 255, glow_alpha), font=font)
-        draw.text((text_x, text_y), text, fill=(255, 255, 255, alpha), font=font)
-    elif style == 'vintage_stamp':
-        # Vintage stamp effect
-        draw.rectangle([x1, y1, x2, y2], outline=(139, 69, 19, alpha), width=2)
-        draw.text((text_x, text_y), text, fill=(139, 69, 19, alpha), font=font)
-    else:  # minimal_clean or default
+        # Neon glow effect with multiple layers
+        glow_color = (0, 255, 255) if color == "white" else base_color
+        for offset in range(4, 0, -1):
+            glow_alpha = alpha // (offset + 1)
+            for dx in [-offset, 0, offset]:
+                for dy in [-offset, 0, offset]:
+                    if dx != 0 or dy != 0:
+                        draw.text((text_x+dx, text_y+dy), text, fill=(*glow_color, glow_alpha), font=font)
         draw.text((text_x, text_y), text, fill=(255, 255, 255, alpha), font=font)
 
+    elif style == 'vintage_stamp':
+        # Vintage stamp effect with border
+        padding = 8
+        stamp_color = (139, 69, 19) if color == "white" else base_color
+        draw.rectangle([x1+padding, y1+padding, x2-padding, y2-padding],
+                      outline=(*stamp_color, alpha), width=3)
+        draw.text((text_x, text_y), text, fill=(*stamp_color, alpha), font=font)
+
+    elif style == 'holographic':
+        # Holographic rainbow effect
+        colors = [(255, 0, 0), (255, 127, 0), (255, 255, 0), (0, 255, 0), (0, 0, 255), (75, 0, 130), (148, 0, 211)]
+        for i, holo_color in enumerate(colors):
+            offset = i - 3
+            draw.text((text_x+offset, text_y), text, fill=(*holo_color, alpha//3), font=font)
+        draw.text((text_x, text_y), text, fill=(*base_color, alpha), font=font)
+
+    elif style == 'artistic_brush':
+        # Artistic brush effect with texture
+        for i in range(3):
+            offset_x = i - 1
+            offset_y = i - 1
+            brush_alpha = alpha // (i + 2)
+            draw.text((text_x+offset_x, text_y+offset_y), text, fill=(*base_color, brush_alpha), font=font)
+        draw.text((text_x, text_y), text, fill=(*base_color, alpha), font=font)
+
+    else:  # minimal_clean or default
+        draw.text((text_x, text_y), text, fill=(*base_color, alpha), font=font)
+
+    print(f"✅ Applied {style} style successfully")
     return overlay
 
 def add_forensic_protection(overlay, text):
@@ -293,12 +380,14 @@ def add_revolutionary_watermark(image_base64, watermark_config):
         # Get watermark settings
         text = watermark_config.get('text', '© PixelFly')
         position = watermark_config.get('position', 'smart_adaptive')
-        opacity = watermark_config.get('opacity', 0.8)
+        opacity = float(watermark_config.get('opacity', 0.8))
         style = watermark_config.get('style', 'modern_glass')
         size = watermark_config.get('size', 'medium')
+        color = watermark_config.get('color', 'white')
         protection_level = watermark_config.get('protection_level', 'advanced')
 
         print(f"🎨 Applying {style} style with {protection_level} protection")
+        print(f"📋 Settings: text='{text}', position={position}, opacity={opacity}, size={size}, color={color}")
 
         # Revolutionary watermark placement logic
         if position == 'smart_adaptive':
@@ -317,7 +406,7 @@ def add_revolutionary_watermark(image_base64, watermark_config):
             print(f"📍 Traditional placement: {watermark_pos}")
 
         # Apply revolutionary watermark style
-        watermarked_overlay = apply_watermark_style(overlay, text, watermark_pos, style, opacity, size)
+        watermarked_overlay = apply_watermark_style(overlay, text, watermark_pos, style, opacity, size, color)
 
         # Apply protection level
         if protection_level == 'forensic':

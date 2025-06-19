@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 // import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Shield, Download, Settings, Zap } from "lucide-react";
-import { useFileUpload } from "@/lib/local-upload";
+// import { useFileUpload } from "@/lib/local-upload"; // Removed - processing files directly
 import { backendClient } from "@/lib/backend-client";
 import { useSession } from "@/lib/auth-client";
 import { Navbar } from "@/components/navbar";
@@ -46,20 +46,7 @@ export default function WatermarkPage() {
     blend_mode: "overlay"
   });
 
-  const { startUpload, isUploading } = useFileUpload("bulkWatermarker", {
-    onClientUploadComplete: async (res) => {
-      if (res && res.length > 0) {
-        const base64List = res.map(file => file.base64 || '');
-        const filenames = res.map(file => file.name);
-        setUploadedFiles(base64List);
-        setUploadedFilenames(filenames);
-      }
-    },
-    onUploadError: (error) => {
-      setError(`Upload failed: ${error.message}`);
-      setIsProcessing(false);
-    },
-  });
+  // Removed UploadThing dependency - processing files directly
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     // Limit to max 3 files
@@ -225,7 +212,7 @@ export default function WatermarkPage() {
                   isDragActive
                     ? "border-purple-500 bg-purple-50"
                     : "border-gray-300 hover:border-purple-400 hover:bg-gray-50"
-                } ${isProcessing || isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <input {...getInputProps()} />
 
@@ -253,18 +240,39 @@ export default function WatermarkPage() {
 
               {uploadedFiles.length > 0 && (
                 <div className="mt-6 bg-gray-50 rounded-lg p-4">
-                  <p className="font-medium mb-2">{uploadedFiles.length} photos uploaded</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {uploadedFilenames.slice(0, 8).map((filename, index) => (
-                      <div key={index} className="text-xs text-gray-600 truncate">
+                  <p className="font-medium mb-4">{uploadedFiles.length} photos uploaded</p>
+
+                  {/* Image Previews */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    {uploadedFiles.slice(0, 3).map((base64, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={`data:image/jpeg;base64,${base64}`}
+                          alt={uploadedFilenames[index]}
+                          className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                          onError={(e) => {
+                            console.error('Failed to load preview image', index);
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                          {uploadedFilenames[index]?.substring(0, 15)}...
+                        </div>
+                        <div className="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                          {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* File List */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {uploadedFilenames.map((filename, index) => (
+                      <div key={index} className="text-xs text-gray-600 truncate flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                         {filename}
                       </div>
                     ))}
-                    {uploadedFilenames.length > 8 && (
-                      <div className="text-xs text-gray-600">
-                        +{uploadedFilenames.length - 8} more
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -358,6 +366,25 @@ export default function WatermarkPage() {
               </div>
 
               <div>
+                <Label htmlFor="color">🎨 Color</Label>
+                <select
+                  id="color"
+                  value={watermarkConfig.color}
+                  onChange={(e) => setWatermarkConfig(prev => ({ ...prev, color: e.target.value }))}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="white">⚪ White</option>
+                  <option value="black">⚫ Black</option>
+                  <option value="red">🔴 Red</option>
+                  <option value="blue">🔵 Blue</option>
+                  <option value="green">🟢 Green</option>
+                  <option value="yellow">🟡 Yellow</option>
+                  <option value="purple">🟣 Purple</option>
+                  <option value="orange">🟠 Orange</option>
+                </select>
+              </div>
+
+              <div>
                 <Label htmlFor="size">📏 Size</Label>
                 <select
                   id="size"
@@ -395,14 +422,14 @@ export default function WatermarkPage() {
       </div>
 
       {/* Processing Progress */}
-      {(isProcessing || isUploading) && (
+      {isProcessing && (
         <Card>
           <CardContent className="p-6">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <Zap className="w-5 h-5 text-purple-600 animate-spin" />
                 <span className="font-medium">
-                  {isUploading ? "Uploading photos..." : `Processing watermarks... (${processedCount}/${totalCount})`}
+                  Processing watermarks... ({processedCount}/{totalCount})
                 </span>
               </div>
               <Progress value={progress} className="w-full" />
@@ -435,6 +462,7 @@ export default function WatermarkPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Processing Stats */}
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div>
@@ -456,6 +484,61 @@ export default function WatermarkPage() {
               </div>
             </div>
 
+            {/* Before/After Preview */}
+            {result.watermarkedBase64 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-center">🔍 Before & After Preview</h3>
+                <div className="grid gap-6">
+                  {result.watermarkedBase64.map((watermarkedBase64, index) => (
+                    <div key={index} className="grid md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                      {/* Original */}
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-gray-700 text-center">📸 Original</h4>
+                        <div className="relative rounded-lg overflow-hidden border-2 border-gray-200">
+                          <img
+                            src={`data:image/jpeg;base64,${uploadedFiles[index]}`}
+                            alt={`Original ${uploadedFilenames[index]}`}
+                            className="w-full h-48 object-cover"
+                            onError={(e) => {
+                              console.error('Failed to load original image', index);
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                          <div className="absolute bottom-2 left-2 bg-gray-800 bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                            Original
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Watermarked */}
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-purple-700 text-center">🛡️ Watermarked</h4>
+                        <div className="relative rounded-lg overflow-hidden border-2 border-purple-200">
+                          <img
+                            src={`data:image/jpeg;base64,${watermarkedBase64}`}
+                            alt={`Watermarked ${uploadedFilenames[index]}`}
+                            className="w-full h-48 object-cover"
+                            onError={(e) => {
+                              console.error('Failed to load watermarked image', index);
+                              e.currentTarget.style.display = 'none';
+                            }}
+                            onLoad={() => console.log(`Watermarked image ${index} loaded successfully`)}
+                          />
+                          <div className="absolute bottom-2 left-2 bg-purple-600 bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                            🛡️ Protected
+                          </div>
+                          <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                            ✅ Enhanced
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Download Button */}
             <div className="flex justify-center">
               <Button
                 onClick={downloadAll}
@@ -463,7 +546,7 @@ export default function WatermarkPage() {
                 className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
               >
                 <Download className="w-5 h-5 mr-2" />
-                Download All Watermarked Photos
+                Download All Watermarked Photos ({result.processedCount})
               </Button>
             </div>
           </CardContent>
