@@ -34,12 +34,16 @@ export default function WatermarkPage() {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [uploadedFilenames, setUploadedFilenames] = useState<string[]>([]);
 
-  // Watermark configuration
+  // Revolutionary watermark configuration
   const [watermarkConfig, setWatermarkConfig] = useState({
     text: "© PixelFly",
-    position: "bottom_right",
-    opacity: 0.7,
-    color: "white"
+    position: "smart_adaptive",
+    opacity: 0.8,
+    color: "white",
+    style: "modern_glass",
+    size: "medium",
+    protection_level: "advanced",
+    blend_mode: "overlay"
   });
 
   const { startUpload, isUploading } = useFileUpload("bulkWatermarker", {
@@ -58,6 +62,12 @@ export default function WatermarkPage() {
   });
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    // Limit to max 3 files
+    if (acceptedFiles.length > 3) {
+      setError("Maximum 3 photos allowed. Please select up to 3 images.");
+      return;
+    }
+
     if (acceptedFiles.length === 0) return;
 
     setError(null);
@@ -67,13 +77,28 @@ export default function WatermarkPage() {
     setTotalCount(acceptedFiles.length);
 
     try {
-      // Upload files
-      await startUpload(acceptedFiles);
+      // Process files directly without UploadThing
+      const base64Files: string[] = [];
+      const filenames: string[] = [];
+
+      for (const file of acceptedFiles) {
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+        base64Files.push(base64.split(',')[1]); // Remove data URL prefix
+        filenames.push(file.name);
+      }
+
+      setUploadedFiles(base64Files);
+      setUploadedFilenames(filenames);
+      setIsProcessing(false);
     } catch (error) {
-      setError("Failed to upload photos");
+      setError("Failed to process photos");
       setIsProcessing(false);
     }
-  }, [startUpload]);
+  }, []);
 
   const processWatermarking = async () => {
     if (uploadedFiles.length === 0) return;
@@ -83,29 +108,40 @@ export default function WatermarkPage() {
       setProgress(0);
       setProcessedCount(0);
 
-      // Simulate processing
-      for (let i = 0; i < uploadedFiles.length; i++) {
-        setTimeout(() => {
-          setProcessedCount(i + 1);
-          setProgress(((i + 1) / uploadedFiles.length) * 100);
-        }, (i + 1) * 300);
+      console.log('Starting revolutionary watermarking process...');
+      console.log('Config:', watermarkConfig);
+      console.log('Files to process:', uploadedFiles.length);
+
+      // Call backend for revolutionary watermarking
+      const request = {
+        image_base64_list: uploadedFiles,
+        user_id: "anonymous", // session?.user?.id || "anonymous",
+        watermark_config: watermarkConfig
+      };
+
+      setProgress(30);
+
+      const watermarkResult = await backendClient.watermarkPhotos(request);
+
+      setProgress(80);
+
+      if (watermarkResult.success) {
+        setResult({
+          watermarkedBase64: watermarkResult.watermarked_base64,
+          processingTime: watermarkResult.processing_time,
+          processedCount: watermarkResult.processed_count
+        });
+        setProgress(100);
+      } else {
+        throw new Error(watermarkResult.error || "Watermarking failed");
       }
 
-      // Complete processing
-      setTimeout(() => {
-        setResult({
-          watermarkedUrls: uploadedFiles, // Same URLs for demo
-          watermarkedBase64: undefined,
-          processingTime: uploadedFiles.length * 0.3,
-          processedCount: uploadedFiles.length
-        });
-        setIsProcessing(false);
-      }, uploadedFiles.length * 300 + 500);
-
     } catch (error) {
+      console.error('Watermarking error:', error);
       setError(error instanceof Error ? error.message : "Watermarking failed");
-      setIsProcessing(false);
       setProgress(0);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -114,18 +150,37 @@ export default function WatermarkPage() {
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.webp']
     },
-    maxFiles: 50,
+    maxFiles: 3, // Revolutionary limit: max 3 photos
     maxSize: 8 * 1024 * 1024, // 8MB per file
-    disabled: isProcessing || isUploading
+    disabled: isProcessing
   });
 
   const downloadAll = () => {
-    if (result?.watermarkedUrls) {
-      result.watermarkedUrls.forEach((url, index) => {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `watermarked-${uploadedFilenames[index] || `image-${index + 1}.jpg`}`;
-        setTimeout(() => link.click(), index * 100);
+    if (result?.watermarkedBase64) {
+      result.watermarkedBase64.forEach((base64, index) => {
+        try {
+          // Convert base64 to blob and download
+          const byteCharacters = atob(base64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `watermarked-${uploadedFilenames[index] || `image-${index + 1}.jpg`}`;
+          document.body.appendChild(link);
+          setTimeout(() => {
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          }, index * 200);
+        } catch (error) {
+          console.error('Download failed for image', index, error);
+        }
       });
     }
   };
@@ -137,11 +192,17 @@ export default function WatermarkPage() {
         <div className="max-w-6xl mx-auto p-6 space-y-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Bulk Photo Watermarking
+          🛡️ Revolutionary AI Watermarking
         </h1>
-        <p className="text-xl text-gray-600">
-          Add watermarks to multiple photos at once with AI-powered placement
+        <p className="text-xl text-gray-600 mb-2">
+          Intelligent watermarking with adaptive placement and advanced protection
         </p>
+        <div className="flex justify-center gap-4 text-sm text-purple-600 font-medium">
+          <span>🧠 Smart Adaptive Placement</span>
+          <span>🎨 Multiple Artistic Styles</span>
+          <span>🔒 Advanced Protection</span>
+          <span>📸 1-3 Photos Max</span>
+        </div>
       </div>
 
       {/* Backend Status */}
@@ -181,7 +242,10 @@ export default function WatermarkPage() {
                       {isDragActive ? "Drop your photos here" : "Upload photos to watermark"}
                     </p>
                     <p className="text-gray-500 mt-2">
-                      Drag & drop or click to select • Up to 50 files • Max 8MB each
+                      Drag & drop or click to select • 1-3 photos only • Max 8MB each
+                    </p>
+                    <p className="text-xs text-purple-600 mt-1">
+                      ✨ AI will intelligently place watermarks to avoid important content
                     </p>
                   </div>
                 </motion.div>
@@ -219,7 +283,7 @@ export default function WatermarkPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="watermark-text">Watermark Text</Label>
+                <Label htmlFor="watermark-text">🎨 Watermark Text</Label>
                 <Input
                   id="watermark-text"
                   value={watermarkConfig.text}
@@ -229,23 +293,58 @@ export default function WatermarkPage() {
               </div>
 
               <div>
-                <Label htmlFor="position">Position</Label>
+                <Label htmlFor="position">🧠 Smart Placement</Label>
                 <select
                   id="position"
                   value={watermarkConfig.position}
                   onChange={(e) => setWatermarkConfig(prev => ({ ...prev, position: e.target.value }))}
                   className="w-full p-2 border border-gray-300 rounded-md"
                 >
-                  <option value="bottom_right">Bottom Right</option>
-                  <option value="bottom_left">Bottom Left</option>
-                  <option value="top_right">Top Right</option>
-                  <option value="top_left">Top Left</option>
-                  <option value="center">Center</option>
+                  <option value="smart_adaptive">🤖 AI Smart Adaptive</option>
+                  <option value="content_aware">🎯 Content Aware</option>
+                  <option value="edge_detection">🔍 Edge Detection</option>
+                  <option value="bottom_right">📍 Bottom Right</option>
+                  <option value="bottom_left">📍 Bottom Left</option>
+                  <option value="top_right">📍 Top Right</option>
+                  <option value="top_left">📍 Top Left</option>
+                  <option value="center">📍 Center</option>
                 </select>
               </div>
 
               <div>
-                <Label htmlFor="opacity">Opacity: {Math.round(watermarkConfig.opacity * 100)}%</Label>
+                <Label htmlFor="style">✨ Watermark Style</Label>
+                <select
+                  id="style"
+                  value={watermarkConfig.style}
+                  onChange={(e) => setWatermarkConfig(prev => ({ ...prev, style: e.target.value }))}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="modern_glass">🔮 Modern Glass</option>
+                  <option value="neon_glow">⚡ Neon Glow</option>
+                  <option value="vintage_stamp">📜 Vintage Stamp</option>
+                  <option value="holographic">🌈 Holographic</option>
+                  <option value="minimal_clean">🎯 Minimal Clean</option>
+                  <option value="artistic_brush">🎨 Artistic Brush</option>
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="protection">🔒 Protection Level</Label>
+                <select
+                  id="protection"
+                  value={watermarkConfig.protection_level}
+                  onChange={(e) => setWatermarkConfig(prev => ({ ...prev, protection_level: e.target.value }))}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="basic">🛡️ Basic Protection</option>
+                  <option value="advanced">🔐 Advanced Protection</option>
+                  <option value="forensic">🕵️ Forensic Level</option>
+                  <option value="invisible">👻 Invisible Steganography</option>
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="opacity">💫 Opacity: {Math.round(watermarkConfig.opacity * 100)}%</Label>
                 <input
                   type="range"
                   id="opacity"
@@ -256,6 +355,21 @@ export default function WatermarkPage() {
                   onChange={(e) => setWatermarkConfig(prev => ({ ...prev, opacity: parseFloat(e.target.value) }))}
                   className="w-full"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="size">📏 Size</Label>
+                <select
+                  id="size"
+                  value={watermarkConfig.size}
+                  onChange={(e) => setWatermarkConfig(prev => ({ ...prev, size: e.target.value }))}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="small">🔸 Small</option>
+                  <option value="medium">🔹 Medium</option>
+                  <option value="large">🔶 Large</option>
+                  <option value="adaptive">🎯 Adaptive</option>
+                </select>
               </div>
 
               <Button

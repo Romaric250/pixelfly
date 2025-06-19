@@ -152,6 +152,44 @@ class BackendClient {
   }
 
   /**
+   * Revolutionary watermarking method
+   */
+  async watermarkPhotos(request: any): Promise<any> {
+    try {
+      console.log('Sending watermark request to:', `${this.baseUrl}/api/watermark`);
+      console.log('Request payload:', request);
+
+      const response = await fetch(`${this.baseUrl}/api/watermark`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+
+      console.log('Watermark response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Watermark error response:', errorText);
+        throw new Error(`Backend error: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('Watermark response:', {
+        success: result.success,
+        processed_count: result.processed_count,
+        processing_time: result.processing_time
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Watermarking failed:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get backend AI capabilities
    */
   async getCapabilities(): Promise<BackendCapabilities> {
