@@ -7,6 +7,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import logging
 import base64
+import numpy as np
 from io import BytesIO
 from PIL import Image, ImageEnhance, ImageFilter
 
@@ -31,29 +32,54 @@ def enhance_image_simple(image_base64):
             image = image.convert('RGB')
             print("Converted image to RGB mode")
 
-        # Apply noticeable enhancements
-        print("Applying contrast enhancement...")
+        # Analyze image to determine optimal enhancements
+        img_array = np.array(image)
+        brightness = np.mean(img_array)
+        contrast = np.std(img_array)
+
+        print(f"Image analysis - Brightness: {brightness:.1f}, Contrast: {contrast:.1f}")
+
+        # Determine enhancement factors based on analysis
+        if brightness < 100:  # Dark image
+            brightness_factor = 1.1
+            contrast_factor = 1.15
+            print("Detected dark image - applying brightness boost")
+        elif brightness > 180:  # Bright image
+            brightness_factor = 0.95
+            contrast_factor = 1.05
+            print("Detected bright image - reducing brightness slightly")
+        else:  # Normal image
+            brightness_factor = 1.02
+            contrast_factor = 1.08
+            print("Normal brightness detected - applying gentle enhancement")
+
+        if contrast < 30:  # Low contrast
+            contrast_factor *= 1.2
+            print("Low contrast detected - boosting contrast")
+
+        # Apply smart, adaptive enhancements
+        print(f"Applying adaptive contrast enhancement (factor: {contrast_factor})...")
         enhancer = ImageEnhance.Contrast(image)
-        image = enhancer.enhance(1.4)  # Increase contrast significantly
+        image = enhancer.enhance(contrast_factor)
 
-        print("Applying brightness enhancement...")
+        print(f"Applying adaptive brightness optimization (factor: {brightness_factor})...")
         enhancer = ImageEnhance.Brightness(image)
-        image = enhancer.enhance(1.15)  # Slight brightness boost
+        image = enhancer.enhance(brightness_factor)
 
-        print("Applying color saturation...")
+        print("Applying color enhancement...")
         enhancer = ImageEnhance.Color(image)
-        image = enhancer.enhance(1.3)  # Boost colors
+        image = enhancer.enhance(1.15)  # Gentle color boost
 
         print("Applying sharpness enhancement...")
         enhancer = ImageEnhance.Sharpness(image)
-        image = enhancer.enhance(1.5)  # Make it sharper
+        image = enhancer.enhance(1.2)  # Moderate sharpening
 
-        # Apply additional filters for more visible effect
-        print("Applying detail filter...")
-        image = image.filter(ImageFilter.DETAIL)
+        # Apply gentle noise reduction and detail enhancement
+        print("Applying smooth filter for noise reduction...")
+        image = image.filter(ImageFilter.SMOOTH_MORE)
 
-        print("Applying unsharp mask...")
-        image = image.filter(ImageFilter.UnsharpMask(radius=2, percent=150, threshold=3))
+        print("Applying gentle unsharp mask...")
+        image = image.filter(ImageFilter.UnsharpMask(radius=1, percent=120, threshold=2))
 
         # Convert back to base64
         print("Converting enhanced image back to base64...")
@@ -102,12 +128,12 @@ def enhance():
             "enhanced_base64": enhanced_base64,
             "processing_time": 1.0,
             "enhancements_applied": [
-                "contrast_enhancement",
-                "brightness_adjustment",
-                "color_saturation",
-                "sharpness_boost",
-                "detail_filter",
-                "unsharp_mask"
+                "smart_contrast_optimization",
+                "adaptive_brightness_adjustment",
+                "gentle_color_enhancement",
+                "professional_sharpening",
+                "noise_reduction",
+                "detail_preservation"
             ]
         }
 
