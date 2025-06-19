@@ -67,6 +67,7 @@ export function Navbar() {
             <div className="hidden md:flex items-center space-x-1">
               <NavLink href="/enhance">Enhance</NavLink>
               <NavLink href="/watermark">Watermark</NavLink>
+              <NavLink href="/pricing">Pricing</NavLink>
               <NavLink href="#features">Features</NavLink>
               <NavLink href="#about">About</NavLink>
               <div className="w-px h-6 bg-purple-200 mx-4" />
@@ -130,6 +131,9 @@ export function Navbar() {
             </Link>
             <Link href="/watermark" className="block text-gray-700 hover:text-purple-600 font-medium transition-colors">
               Bulk Watermark
+            </Link>
+            <Link href="/pricing" className="block text-gray-700 hover:text-purple-600 font-medium transition-colors">
+              Pricing
             </Link>
             <Link href="#features" className="block text-gray-700 hover:text-purple-600 font-medium transition-colors">
               Features
