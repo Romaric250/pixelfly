@@ -61,7 +61,7 @@ export function LandingStats() {
       label: "Photos Enhanced",
       color: "text-purple-600",
       bgColor: "bg-purple-100",
-      isImplemented: false, // Will be true when feature is implemented
+      isImplemented: true, // Now implemented with real tracking!
     },
     {
       icon: Shield,
@@ -69,7 +69,7 @@ export function LandingStats() {
       label: "Photos Watermarked",
       color: "text-green-600",
       bgColor: "bg-green-100",
-      isImplemented: false, // Will be true when feature is implemented
+      isImplemented: true, // Now implemented with real tracking!
     },
   ];
 

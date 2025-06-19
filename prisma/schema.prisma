@@ -80,3 +80,36 @@ model Verification {
 
   @@map("verification")
 }
+
+// Photo Enhancement tracking model
+model PhotoEnhancement {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String?  // Optional - for anonymous users
+  filename    String?
+  fileSize    Int?     // File size in bytes
+  processingTime Float // Processing time in seconds
+  enhancementType String? // Type of enhancement applied
+  success     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("photo_enhancement")
+}
+
+// Photo Watermarking tracking model
+model PhotoWatermark {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String?  // Optional - for anonymous users
+  filename    String?
+  fileSize    Int?     // File size in bytes
+  processingTime Float // Processing time in seconds
+  watermarkText String?
+  watermarkStyle String?
+  watermarkPosition String?
+  photoCount  Int      @default(1) // Number of photos watermarked in this operation
+  success     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("photo_watermark")
+}

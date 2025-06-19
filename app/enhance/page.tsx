@@ -405,7 +405,7 @@ Enhancing with AI...
                           console.log('Enhanced base64 length:', result.enhancedBase64?.length);
                           e.currentTarget.style.display = 'none';
                         }}
-                        onLoad={() => {
+                        onLoad={(e) => {
                           console.log('Enhanced image loaded successfully');
                           console.log('Enhanced image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
                         }}

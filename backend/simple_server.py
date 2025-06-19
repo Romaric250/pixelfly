@@ -113,6 +113,7 @@ def enhance():
         print(f"Received data keys: {list(data.keys()) if data else 'None'}")
 
         image_base64 = data.get('image_base64')
+        user_id = data.get('user_id', 'anonymous')
         if image_base64:
             print(f"Received image base64 length: {len(image_base64)}")
 
@@ -136,6 +137,22 @@ def enhance():
                 "detail_preservation"
             ]
         }
+
+        # Track enhancement operation
+        try:
+            import requests
+            track_data = {
+                "userId": user_id,
+                "filename": "enhanced_image.jpg",
+                "processingTime": 1.0,
+                "enhancementType": "smart_enhancement",
+                "success": True
+            }
+            # Send to Next.js API to track in database
+            requests.post("http://localhost:3000/api/track/enhancement", json=track_data, timeout=2)
+            print("✅ Enhancement operation tracked")
+        except Exception as e:
+            print(f"⚠️ Failed to track enhancement: {e}")
 
         print("Sending response with enhanced image")
         return jsonify(result)
@@ -482,6 +499,25 @@ def watermark_photos():
             "processing_time": len(image_base64_list) * 1.2,
             "processed_count": len(image_base64_list)
         }
+
+        # Track watermarking operation
+        try:
+            import requests
+            track_data = {
+                "userId": user_id,
+                "filename": "watermarked_images.jpg",
+                "processingTime": len(image_base64_list) * 1.2,
+                "watermarkText": watermark_config.get('text', '© PixelFly'),
+                "watermarkStyle": watermark_config.get('style', 'modern_glass'),
+                "watermarkPosition": watermark_config.get('position', 'smart_adaptive'),
+                "photoCount": len(image_base64_list),
+                "success": True
+            }
+            # Send to Next.js API to track in database
+            requests.post("http://localhost:3000/api/track/watermark", json=track_data, timeout=2)
+            print("✅ Watermarking operation tracked")
+        except Exception as e:
+            print(f"⚠️ Failed to track watermarking: {e}")
 
         print("Sending successful watermark response")
         return jsonify(result)
