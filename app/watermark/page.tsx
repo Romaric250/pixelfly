@@ -33,6 +33,12 @@ export default function WatermarkPage() {
   const [error, setError] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [uploadedFilenames, setUploadedFilenames] = useState<string[]>([]);
+  const [previewModal, setPreviewModal] = useState<{isOpen: boolean, imageData: string, title: string, type: 'original' | 'watermarked'}>({
+    isOpen: false,
+    imageData: '',
+    title: '',
+    type: 'original'
+  });
 
   // Revolutionary watermark configuration
   const [watermarkConfig, setWatermarkConfig] = useState({
@@ -245,21 +251,42 @@ export default function WatermarkPage() {
                   {/* Image Previews */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                     {uploadedFiles.slice(0, 3).map((base64, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={`data:image/jpeg;base64,${base64}`}
-                          alt={uploadedFilenames[index]}
-                          className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
-                          onError={(e) => {
-                            console.error('Failed to load preview image', index);
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                        <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                          {uploadedFilenames[index]?.substring(0, 15)}...
-                        </div>
-                        <div className="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                          {index + 1}
+                      <div key={index} className="relative group">
+                        <div className="relative rounded-lg overflow-hidden border-2 border-gray-200 hover:border-purple-300 transition-colors">
+                          <img
+                            src={`data:image/jpeg;base64,${base64}`}
+                            alt={uploadedFilenames[index]}
+                            className="w-full h-40 object-contain bg-gray-50 hover:scale-105 transition-transform cursor-pointer"
+                            onError={(e) => {
+                              console.error('Failed to load preview image', index);
+                              e.currentTarget.style.display = 'none';
+                            }}
+                            onClick={() => {
+                              // Open image in new tab for full view
+                              const newWindow = window.open();
+                              if (newWindow) {
+                                newWindow.document.write(`
+                                  <html>
+                                    <head><title>${uploadedFilenames[index]}</title></head>
+                                    <body style="margin:0; background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh;">
+                                      <img src="data:image/jpeg;base64,${base64}" style="max-width:100%; max-height:100%; object-fit:contain;" />
+                                    </body>
+                                  </html>
+                                `);
+                              }
+                            }}
+                          />
+                          <div className="absolute bottom-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                            {uploadedFilenames[index]?.substring(0, 20)}...
+                          </div>
+                          <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                            {index + 1}
+                          </div>
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
+                            <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
+                              🔍 Click to view full size
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -486,51 +513,117 @@ export default function WatermarkPage() {
 
             {/* Before/After Preview */}
             {result.watermarkedBase64 && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-center">🔍 Before & After Preview</h3>
-                <div className="grid gap-6">
+              <div className="space-y-6">
+                <h3 className="text-xl font-bold text-center text-gray-800">🔍 Before & After Preview</h3>
+                <div className="space-y-8">
                   {result.watermarkedBase64.map((watermarkedBase64, index) => (
-                    <div key={index} className="grid md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                      {/* Original */}
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-gray-700 text-center">📸 Original</h4>
-                        <div className="relative rounded-lg overflow-hidden border-2 border-gray-200">
-                          <img
-                            src={`data:image/jpeg;base64,${uploadedFiles[index]}`}
-                            alt={`Original ${uploadedFilenames[index]}`}
-                            className="w-full h-48 object-cover"
-                            onError={(e) => {
-                              console.error('Failed to load original image', index);
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                          <div className="absolute bottom-2 left-2 bg-gray-800 bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                            Original
+                    <div key={index} className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                      {/* Image Info Header */}
+                      <div className="mb-4 text-center">
+                        <h4 className="text-lg font-semibold text-gray-800">
+                          📷 {uploadedFilenames[index] || `Image ${index + 1}`}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Watermark: {watermarkConfig.text} • Style: {watermarkConfig.style} • Position: {watermarkConfig.position}
+                        </p>
+                      </div>
+
+                      {/* Images Grid */}
+                      <div className="grid lg:grid-cols-2 gap-6">
+                        {/* Original */}
+                        <div className="space-y-3">
+                          <h5 className="font-semibold text-gray-700 text-center flex items-center justify-center gap-2">
+                            📸 Original Image
+                            <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Before</span>
+                          </h5>
+                          <div className="relative rounded-xl overflow-hidden border-2 border-gray-300 shadow-md hover:shadow-lg transition-shadow">
+                            <img
+                              src={`data:image/jpeg;base64,${uploadedFiles[index]}`}
+                              alt={`Original ${uploadedFilenames[index]}`}
+                              className="w-full h-auto max-h-96 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
+                              onError={(e) => {
+                                console.error('Failed to load original image', index);
+                                e.currentTarget.style.display = 'none';
+                              }}
+                              onClick={() => setPreviewModal({
+                                isOpen: true,
+                                imageData: uploadedFiles[index],
+                                title: `Original - ${uploadedFilenames[index]}`,
+                                type: 'original'
+                              })}
+                            />
+                            <div className="absolute bottom-3 left-3 bg-gray-800 bg-opacity-80 text-white text-sm px-3 py-1 rounded-full">
+                              📸 Original
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Watermarked */}
+                        <div className="space-y-3">
+                          <h5 className="font-semibold text-purple-700 text-center flex items-center justify-center gap-2">
+                            🛡️ Watermarked Image
+                            <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">After</span>
+                          </h5>
+                          <div className="relative rounded-xl overflow-hidden border-2 border-purple-300 shadow-md hover:shadow-lg transition-shadow">
+                            <img
+                              src={`data:image/jpeg;base64,${watermarkedBase64}`}
+                              alt={`Watermarked ${uploadedFilenames[index]}`}
+                              className="w-full h-auto max-h-96 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
+                              onError={(e) => {
+                                console.error('Failed to load watermarked image', index);
+                                e.currentTarget.style.display = 'none';
+                              }}
+                              onLoad={() => console.log(`Watermarked image ${index} loaded successfully`)}
+                              onClick={() => setPreviewModal({
+                                isOpen: true,
+                                imageData: watermarkedBase64,
+                                title: `Watermarked - ${uploadedFilenames[index]}`,
+                                type: 'watermarked'
+                              })}
+                            />
+                            <div className="absolute bottom-3 left-3 bg-purple-600 bg-opacity-80 text-white text-sm px-3 py-1 rounded-full">
+                              🛡️ Protected
+                            </div>
+                            <div className="absolute top-3 right-3 bg-green-500 text-white text-sm px-3 py-1 rounded-full shadow-lg">
+                              ✅ Watermarked
+                            </div>
+                            <div className="absolute top-3 left-3 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                              {watermarkConfig.style}
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Watermarked */}
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-purple-700 text-center">🛡️ Watermarked</h4>
-                        <div className="relative rounded-lg overflow-hidden border-2 border-purple-200">
-                          <img
-                            src={`data:image/jpeg;base64,${watermarkedBase64}`}
-                            alt={`Watermarked ${uploadedFilenames[index]}`}
-                            className="w-full h-48 object-cover"
-                            onError={(e) => {
-                              console.error('Failed to load watermarked image', index);
-                              e.currentTarget.style.display = 'none';
-                            }}
-                            onLoad={() => console.log(`Watermarked image ${index} loaded successfully`)}
-                          />
-                          <div className="absolute bottom-2 left-2 bg-purple-600 bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                            🛡️ Protected
-                          </div>
-                          <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                            ✅ Enhanced
-                          </div>
-                        </div>
+                      {/* Quick Actions */}
+                      <div className="mt-4 flex justify-center gap-3">
+                        <button
+                          onClick={() => {
+                            // Download individual image
+                            try {
+                              const byteCharacters = atob(watermarkedBase64);
+                              const byteNumbers = new Array(byteCharacters.length);
+                              for (let i = 0; i < byteCharacters.length; i++) {
+                                byteNumbers[i] = byteCharacters.charCodeAt(i);
+                              }
+                              const byteArray = new Uint8Array(byteNumbers);
+                              const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+                              const url = URL.createObjectURL(blob);
+                              const link = document.createElement('a');
+                              link.href = url;
+                              link.download = `watermarked-${uploadedFilenames[index] || `image-${index + 1}.jpg`}`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              URL.revokeObjectURL(url);
+                            } catch (error) {
+                              console.error('Download failed for image', index, error);
+                            }
+                          }}
+                          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                        >
+                          📥 Download This Image
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -554,6 +647,81 @@ export default function WatermarkPage() {
       )}
         </div>
       </div>
+
+      {/* Full-Screen Preview Modal */}
+      {previewModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
+          <div className="relative max-w-7xl max-h-full w-full h-full flex flex-col">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center mb-4 text-white">
+              <div>
+                <h3 className="text-xl font-bold">{previewModal.title}</h3>
+                <p className="text-sm text-gray-300">
+                  {previewModal.type === 'watermarked' ? '🛡️ Watermarked Version' : '📸 Original Version'}
+                </p>
+              </div>
+              <button
+                onClick={() => setPreviewModal({isOpen: false, imageData: '', title: '', type: 'original'})}
+                className="text-white hover:text-gray-300 text-2xl font-bold p-2"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Image */}
+            <div className="flex-1 flex items-center justify-center">
+              <img
+                src={`data:image/jpeg;base64,${previewModal.imageData}`}
+                alt={previewModal.title}
+                className="max-w-full max-h-full object-contain"
+                onError={(e) => {
+                  console.error('Failed to load modal image');
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="mt-4 flex justify-center gap-4">
+              <button
+                onClick={() => setPreviewModal({isOpen: false, imageData: '', title: '', type: 'original'})}
+                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+              {previewModal.type === 'watermarked' && (
+                <button
+                  onClick={() => {
+                    try {
+                      const byteCharacters = atob(previewModal.imageData);
+                      const byteNumbers = new Array(byteCharacters.length);
+                      for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                      }
+                      const byteArray = new Uint8Array(byteNumbers);
+                      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `watermarked-${previewModal.title.replace('Watermarked - ', '')}.jpg`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(url);
+                    } catch (error) {
+                      console.error('Download failed:', error);
+                    }
+                  }}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  📥 Download
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
