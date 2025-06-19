@@ -552,7 +552,7 @@ export default function WatermarkPage() {
                                 type: 'original'
                               })}
                             />
-                            <div className="absolute bottom-3 left-3 bg-gray-800 bg-opacity-80 text-white text-sm px-3 py-1 rounded-full">
+                            <div className="absolute top-3 left-3 bg-gray-800 bg-opacity-80 text-white text-sm px-3 py-1 rounded-full">
                               📸 Original
                             </div>
                           </div>
@@ -581,14 +581,12 @@ export default function WatermarkPage() {
                                 type: 'watermarked'
                               })}
                             />
-                            <div className="absolute bottom-3 left-3 bg-purple-600 bg-opacity-80 text-white text-sm px-3 py-1 rounded-full">
-                              🛡️ Protected
-                            </div>
-                            <div className="absolute top-3 right-3 bg-green-500 text-white text-sm px-3 py-1 rounded-full shadow-lg">
-                              ✅ Watermarked
-                            </div>
-                            <div className="absolute top-3 left-3 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                            {/* Move overlays to top to avoid hiding watermarks */}
+                            <div className="absolute top-3 left-3 bg-blue-500 text-white text-xs px-2 py-1 rounded shadow-lg">
                               {watermarkConfig.style}
+                            </div>
+                            <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded shadow-lg">
+                              ✅ Watermarked
                             </div>
                           </div>
                         </div>

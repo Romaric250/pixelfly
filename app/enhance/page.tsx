@@ -28,6 +28,12 @@ export default function EnhancePage() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<EnhancementResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [previewModal, setPreviewModal] = useState<{isOpen: boolean, imageData: string, title: string, type: 'original' | 'enhanced'}>({
+    isOpen: false,
+    imageData: '',
+    title: '',
+    type: 'original'
+  });
 
   // Removed UploadThing dependency - processing files directly
 
@@ -338,53 +344,97 @@ Enhancing with AI...
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Before/After Comparison */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold mb-3 text-gray-700 flex items-center gap-2">
-                  Original
-                  <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Before</span>
-                </h3>
-                <div className="relative rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200">
-                  <img
-                    src={result.originalUrl}
-                    alt="Original photo"
-                    className="w-full h-64 object-cover"
-                    onError={(e) => {
-                      console.error('Failed to load original image');
-                      e.currentTarget.style.display = 'none';
-                    }}
-                    onLoad={() => console.log('Original image loaded successfully')}
-                  />
-                </div>
-              </div>
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-center text-gray-800">🔍 Before & After Comparison</h3>
 
-              <div>
-                <h3 className="font-semibold mb-3 text-purple-700 flex items-center gap-2">
-                  Enhanced
-                  <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">After AI</span>
-                </h3>
-                <div className="relative rounded-lg overflow-hidden bg-gray-100 border-2 border-purple-200">
-                  <img
-                    src={result.enhancedBase64 ? `data:image/jpeg;base64,${result.enhancedBase64}` : result.enhancedUrl}
-                    alt="Enhanced photo"
-                    className="w-full h-64 object-cover"
-                    onError={(e) => {
-                      console.error('Failed to load enhanced image');
-                      console.log('Enhanced base64 length:', result.enhancedBase64?.length);
-                      console.log('Enhanced image src preview:', result.enhancedBase64 ? `data:image/jpeg;base64,${result.enhancedBase64.substring(0, 50)}...` : result.enhancedUrl);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                    onLoad={() => {
-                      console.log('Enhanced image loaded successfully');
-                      console.log('Enhanced image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
-                    }}
-                  />
-                  <div className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium">
-                    ✨ AI Enhanced
+              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                {/* Enhancement Info Header */}
+                <div className="mb-4 text-center">
+                  <h4 className="text-lg font-semibold text-gray-800">
+                    📷 {result.originalFilename || 'Enhanced Photo'}
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Processing time: {result.processingTime?.toFixed(2)}s • {result.enhancementsApplied?.length} enhancements applied
+                  </p>
+                </div>
+
+                {/* Images Grid */}
+                <div className="grid lg:grid-cols-2 gap-6">
+                  {/* Original */}
+                  <div className="space-y-3">
+                    <h5 className="font-semibold text-gray-700 text-center flex items-center justify-center gap-2">
+                      📸 Original Image
+                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Before</span>
+                    </h5>
+                    <div className="relative rounded-xl overflow-hidden border-2 border-gray-300 shadow-md hover:shadow-lg transition-shadow">
+                      <img
+                        src={result.originalUrl}
+                        alt="Original photo"
+                        className="w-full h-auto max-h-96 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
+                        onError={(e) => {
+                          console.error('Failed to load original image');
+                          e.currentTarget.style.display = 'none';
+                        }}
+                        onLoad={() => console.log('Original image loaded successfully')}
+                        onClick={() => setPreviewModal({
+                          isOpen: true,
+                          imageData: result.originalUrl.split(',')[1] || result.originalUrl,
+                          title: `Original - ${result.originalFilename || 'Photo'}`,
+                          type: 'original'
+                        })}
+                      />
+                      <div className="absolute top-3 left-3 bg-gray-800 bg-opacity-80 text-white text-sm px-3 py-1 rounded-full">
+                        📸 Original
+                      </div>
+                    </div>
                   </div>
-                  <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-medium">
-                    Enhanced Quality
+
+                  {/* Enhanced */}
+                  <div className="space-y-3">
+                    <h5 className="font-semibold text-purple-700 text-center flex items-center justify-center gap-2">
+                      ✨ Enhanced Image
+                      <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">After AI</span>
+                    </h5>
+                    <div className="relative rounded-xl overflow-hidden border-2 border-purple-300 shadow-md hover:shadow-lg transition-shadow">
+                      <img
+                        src={result.enhancedBase64 ? `data:image/jpeg;base64,${result.enhancedBase64}` : result.enhancedUrl}
+                        alt="Enhanced photo"
+                        className="w-full h-auto max-h-96 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
+                        onError={(e) => {
+                          console.error('Failed to load enhanced image');
+                          console.log('Enhanced base64 length:', result.enhancedBase64?.length);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                        onLoad={() => {
+                          console.log('Enhanced image loaded successfully');
+                          console.log('Enhanced image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+                        }}
+                        onClick={() => setPreviewModal({
+                          isOpen: true,
+                          imageData: result.enhancedBase64 || (result.enhancedUrl?.split(',')[1] || result.enhancedUrl || ''),
+                          title: `Enhanced - ${result.originalFilename || 'Photo'}`,
+                          type: 'enhanced'
+                        })}
+                      />
+                      {/* Move overlays to top to avoid hiding enhancement effects */}
+                      <div className="absolute top-3 left-3 bg-purple-600 text-white text-xs px-2 py-1 rounded shadow-lg">
+                        ✨ AI Enhanced
+                      </div>
+                      <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded shadow-lg">
+                        Enhanced Quality
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                {/* Quick Download */}
+                <div className="mt-4 flex justify-center">
+                  <button
+                    onClick={downloadEnhanced}
+                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                  >
+                    📥 Download Enhanced Image
+                  </button>
                 </div>
               </div>
             </div>
@@ -407,17 +457,7 @@ Enhancing with AI...
               </p>
             </div>
 
-            {/* Download Button */}
-            <div className="flex justify-center">
-              <Button
-                onClick={downloadEnhanced}
-                size="lg"
-                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
-              >
-                <Download className="w-5 h-5 mr-2" />
-                Download Enhanced Photo
-              </Button>
-            </div>
+            {/* Enhancement Details moved below */}
           </CardContent>
         </Card>
       )}
@@ -445,6 +485,60 @@ Enhancing with AI...
       </Card>
         </div>
       </div>
+
+      {/* Full-Screen Preview Modal */}
+      {previewModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
+          <div className="relative max-w-7xl max-h-full w-full h-full flex flex-col">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center mb-4 text-white">
+              <div>
+                <h3 className="text-xl font-bold">{previewModal.title}</h3>
+                <p className="text-sm text-gray-300">
+                  {previewModal.type === 'enhanced' ? '✨ AI Enhanced Version' : '📸 Original Version'}
+                </p>
+              </div>
+              <button
+                onClick={() => setPreviewModal({isOpen: false, imageData: '', title: '', type: 'original'})}
+                className="text-white hover:text-gray-300 text-2xl font-bold p-2"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Image */}
+            <div className="flex-1 flex items-center justify-center">
+              <img
+                src={previewModal.type === 'original' ? result?.originalUrl : `data:image/jpeg;base64,${previewModal.imageData}`}
+                alt={previewModal.title}
+                className="max-w-full max-h-full object-contain"
+                onError={(e) => {
+                  console.error('Failed to load modal image');
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="mt-4 flex justify-center gap-4">
+              <button
+                onClick={() => setPreviewModal({isOpen: false, imageData: '', title: '', type: 'original'})}
+                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+              {previewModal.type === 'enhanced' && (
+                <button
+                  onClick={downloadEnhanced}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  📥 Download Enhanced
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
