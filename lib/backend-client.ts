@@ -58,7 +58,7 @@ class BackendClient {
     // Use environment variable or fallback based on environment
     if (process.env.NODE_ENV === 'production') {
       // In production, use Vercel deployment URL
-      this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://pixelfly.vercel.app';
+      this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://pixelfly-pi.vercel.app';
     } else {
       // In development, use local backend
       this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
@@ -71,7 +71,7 @@ class BackendClient {
    */
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/health`);
+      const response = await fetch(`${this.baseUrl}/api/health`);
       const data = await response.json();
       return data.status === 'healthy';
     } catch (error) {

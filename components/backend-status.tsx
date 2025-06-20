@@ -11,11 +11,15 @@ export function BackendStatus() {
 
   useEffect(() => {
     const checkBackend = async () => {
-      const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:5000';
+      const url = process.env.NEXT_PUBLIC_BACKEND_URL || (
+        process.env.NODE_ENV === 'production'
+          ? 'https://pixelfly-pi.vercel.app'
+          : 'http://127.0.0.1:5001'
+      );
       setBackendUrl(url);
       
       try {
-        const response = await fetch(`${url}/health`, {
+        const response = await fetch(`${url}/api/health`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
