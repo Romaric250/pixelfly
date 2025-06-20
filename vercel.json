@@ -1,31 +1,3 @@
 {
-  "functions": {
-    "api/python/health.py": {
-      "maxDuration": 10,
-      "memory": 512
-    },
-    "api/python/enhance.py": {
-      "maxDuration": 60,
-      "memory": 1024
-    },
-    "api/python/watermark.py": {
-      "maxDuration": 60,
-      "memory": 1024
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/api/health",
-      "destination": "/api/python/health"
-    },
-    {
-      "source": "/api/enhance",
-      "destination": "/api/python/enhance"
-    },
-    {
-      "source": "/api/watermark",
-      "destination": "/api/python/watermark"
-    }
-  ],
   "regions": ["iad1"]
 }
