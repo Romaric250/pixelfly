@@ -1,19 +1,12 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/backend/api/index.py"
-    }
-  ],
-  "env": {
-    "PYTHONPATH": "backend",
-    "FLASK_ENV": "production"
-  },
   "functions": {
-    "backend/api/index.py": {
+    "api/index.py": {
       "maxDuration": 60,
       "memory": 1024
     }
+  },
+  "env": {
+    "FLASK_ENV": "production"
   },
   "regions": ["iad1"]
 }
