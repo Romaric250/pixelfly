@@ -1,12 +1,17 @@
 {
   "functions": {
-    "api/index.py": {
+    "api/health.py": {
+      "maxDuration": 10,
+      "memory": 512
+    },
+    "api/enhance.py": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "api/watermark.py": {
       "maxDuration": 60,
       "memory": 1024
     }
-  },
-  "env": {
-    "FLASK_ENV": "production"
   },
   "regions": ["iad1"]
 }
