@@ -490,7 +490,6 @@ export default function EnhancePage() {
                 ✕
               </button>
             </div>
-
             {/* Modal Image */}
             <div className="flex-1 flex items-center justify-center">
               <img
@@ -502,6 +501,7 @@ export default function EnhancePage() {
                   e.currentTarget.style.display = 'none';
                 }}
               />
+              
             </div>
 
             {/* Modal Footer */}
