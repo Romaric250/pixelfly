@@ -1,18 +1,9 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "backend/api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "backend/api/index.py"
+      "source": "/api/(.*)",
+      "destination": "/backend/api/index.py"
     }
   ],
   "env": {
@@ -21,6 +12,7 @@
   },
   "functions": {
     "backend/api/index.py": {
+      "runtime": "@vercel/python",
       "maxDuration": 60,
       "memory": 1024
     }
