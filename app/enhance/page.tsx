@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 // import { Progress } from "@/components/ui/progress"; // Temporarily commented out
@@ -21,7 +22,8 @@ interface EnhancementResult {
 }
 
 export default function EnhancePage() {
-  const { data: session } = useSession();
+  const { data: session, isPending } = useSession();
+  const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<EnhancementResult | null>(null);
@@ -32,6 +34,35 @@ export default function EnhancePage() {
     title: '',
     type: 'original'
   });
+
+  // Authentication check
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push('/sign-in');
+    }
+  }, [session, isPending, router]);
+
+  // Show loading while checking authentication
+  if (isPending) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gray-50 py-20">
+          <div className="max-w-4xl mx-auto p-6 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Checking authentication...</p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!session) {
+    return null;
+  }
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;

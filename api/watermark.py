@@ -159,7 +159,37 @@ class handler(BaseHTTPRequestHandler):
                 "processing_time": len(image_base64_list) * 1.2,
                 "processed_count": len(image_base64_list)
             }
-            
+
+            # Track watermarking operation
+            try:
+                import urllib.request
+
+                track_data = {
+                    "userId": "anonymous",  # We don't have user_id in watermark data
+                    "filename": "watermarked_images.jpg",
+                    "processingTime": len(image_base64_list) * 1.2,
+                    "watermarkText": watermark_config.get('text', '© PixelFly'),
+                    "watermarkStyle": watermark_config.get('style', 'modern_glass'),
+                    "watermarkPosition": watermark_config.get('position', 'smart_adaptive'),
+                    "photoCount": len(image_base64_list),
+                    "success": True
+                }
+
+                # Send to Next.js API to track in database
+                track_url = "https://pixelfly-pi.vercel.app/api/track/watermark"
+                track_json = json.dumps(track_data).encode('utf-8')
+
+                req = urllib.request.Request(
+                    track_url,
+                    data=track_json,
+                    headers={'Content-Type': 'application/json'}
+                )
+
+                with urllib.request.urlopen(req, timeout=2) as response:
+                    print("✅ Watermarking operation tracked")
+            except Exception as e:
+                print(f"⚠️ Failed to track watermarking: {e}")
+
             self.send_success_response(result)
             
         except Exception as e:

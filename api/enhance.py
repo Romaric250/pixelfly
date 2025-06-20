@@ -104,6 +104,33 @@ class handler(BaseHTTPRequestHandler):
                 "enhancements_applied": ["smart_contrast", "adaptive_brightness", "color_enhancement", "detail_sharpening"]
             }
 
+            # Track enhancement operation
+            try:
+                import urllib.request
+
+                track_data = {
+                    "userId": user_id,
+                    "filename": "enhanced_image.jpg",
+                    "processingTime": 1.0,
+                    "enhancementType": "smart_enhancement",
+                    "success": True
+                }
+
+                # Send to Next.js API to track in database
+                track_url = "https://pixelfly-pi.vercel.app/api/track/enhancement"
+                track_json = json.dumps(track_data).encode('utf-8')
+
+                req = urllib.request.Request(
+                    track_url,
+                    data=track_json,
+                    headers={'Content-Type': 'application/json'}
+                )
+
+                with urllib.request.urlopen(req, timeout=2) as response:
+                    print("✅ Enhancement operation tracked")
+            except Exception as e:
+                print(f"⚠️ Failed to track enhancement: {e}")
+
             self.send_success_response(result)
             
         except Exception as e:
