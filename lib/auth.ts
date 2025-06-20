@@ -21,7 +21,11 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24, // 1 day
   },
   secret: process.env.BETTER_AUTH_SECRET as string,
-  baseURL: process.env.BETTER_AUTH_URL as string,
+  baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || (
+    process.env.NODE_ENV === 'production'
+      ? 'https://pixelfly-pi.vercel.app'
+      : 'http://localhost:3000'
+  ),
 })
 
 export type Session = typeof auth.$Infer.Session
