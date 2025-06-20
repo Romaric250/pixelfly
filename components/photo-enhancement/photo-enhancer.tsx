@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
-import { useDropzone } from "react-dropzone";
+// import { motion } from "framer-motion"; // Removed - not used
+// import { useDropzone } from "react-dropzone"; // Replaced with simple file input
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,15 +100,12 @@ export function PhotoEnhancer() {
     }
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp']
-    },
-    maxFiles: 1,
-    maxSize: 8 * 1024 * 1024, // 8MB
-    disabled: isProcessing || isUploading
-  });
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      onDrop(Array.from(files));
+    }
+  };
 
   const downloadEnhanced = () => {
     if (result?.enhancedBase64) {
@@ -140,33 +137,29 @@ export function PhotoEnhancer() {
       {/* Upload Area */}
       <Card>
         <CardContent className="p-8">
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
-              isDragActive
-                ? "border-purple-500 bg-purple-50"
-                : "border-gray-300 hover:border-purple-400 hover:bg-gray-50"
-            } ${isProcessing || isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            <input {...getInputProps()} />
-            
-            <motion.div
-              animate={isDragActive ? { scale: 1.05 } : { scale: 1 }}
-              className="space-y-4"
-            >
+          <div className={`border-2 border-dashed rounded-xl p-12 text-center transition-all border-gray-300 hover:border-purple-400 hover:bg-gray-50 ${isProcessing || isUploading ? "opacity-50" : ""}`}>
+            <div className="space-y-4">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
                 <Upload className="w-8 h-8 text-purple-600" />
               </div>
-              
+
               <div>
                 <p className="text-lg font-semibold text-gray-900">
-                  {isDragActive ? "Drop your photo here" : "Upload a photo to enhance"}
+                  Upload a photo to enhance
                 </p>
                 <p className="text-gray-500 mt-2">
-                  Drag & drop or click to select • Max 8MB • JPG, PNG, WebP
+                  Select a photo • Max 8MB • JPG, PNG, WebP
                 </p>
               </div>
-            </motion.div>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                disabled={isProcessing || isUploading}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { useDropzone } from "react-dropzone";
+// import { useDropzone } from "react-dropzone"; // Replaced with simple file input
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -139,15 +139,12 @@ export function BulkWatermarker() {
     }
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp']
-    },
-    maxFiles: 50,
-    maxSize: 8 * 1024 * 1024, // 8MB per file
-    disabled: isProcessing || isUploading
-  });
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      onDrop(Array.from(files));
+    }
+  };
 
   const downloadAll = () => {
     if (result?.watermarkedBase64) {
@@ -190,33 +187,30 @@ export function BulkWatermarker() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-                  isDragActive
-                    ? "border-purple-500 bg-purple-50"
-                    : "border-gray-300 hover:border-purple-400 hover:bg-gray-50"
-                } ${isProcessing || isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                <input {...getInputProps()} />
-                
-                <motion.div
-                  animate={isDragActive ? { scale: 1.05 } : { scale: 1 }}
-                  className="space-y-4"
-                >
+              <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-all border-gray-300 hover:border-purple-400 hover:bg-gray-50 ${isProcessing || isUploading ? "opacity-50" : ""}`}>
+                <div className="space-y-4">
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
                     <Images className="w-8 h-8 text-purple-600" />
                   </div>
-                  
+
                   <div>
                     <p className="text-lg font-semibold text-gray-900">
-                      {isDragActive ? "Drop your photos here" : "Upload photos to watermark"}
+                      Upload photos to watermark
                     </p>
                     <p className="text-gray-500 mt-2">
-                      Drag & drop or click to select • Up to 50 photos • Max 8MB each
+                      Select up to 50 photos • Max 8MB each
                     </p>
                   </div>
-                </motion.div>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileChange}
+                    disabled={isProcessing || isUploading}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                  />
+                </div>
               </div>
 
               {uploadedFiles.length > 0 && (

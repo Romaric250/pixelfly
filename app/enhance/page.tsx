@@ -2,12 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+// import { Progress } from "@/components/ui/progress"; // Temporarily commented out
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, Sparkles, Download, Zap, Image as ImageIcon } from "lucide-react";
-import { useFileUpload } from "@/lib/local-upload";
 import { backendClient } from "@/lib/backend-client";
 import { useSession } from "@/lib/auth-client";
 import { Navbar } from "@/components/navbar";
@@ -35,10 +33,9 @@ export default function EnhancePage() {
     type: 'original'
   });
 
-  // Removed UploadThing dependency - processing files directly
-
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length === 0) return;
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setError(null);
     setResult(null);
@@ -46,7 +43,7 @@ export default function EnhancePage() {
     setProgress(0);
 
     try {
-      const file = acceptedFiles[0];
+      const file = files[0];
       console.log('Processing file directly:', file.name, file.size);
 
       // Convert file to base64 directly
@@ -68,7 +65,7 @@ export default function EnhancePage() {
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Error in onDrop:', error);
+      console.error('Error in handleFileChange:', error);
       setError("Failed to upload photo");
       setIsProcessing(false);
     }
@@ -186,16 +183,6 @@ export default function EnhancePage() {
     }
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp']
-    },
-    maxFiles: 1,
-    maxSize: 8 * 1024 * 1024, // 8MB
-    disabled: isProcessing
-  });
-
   const downloadEnhanced = () => {
     if (result?.enhancedBase64) {
       // Download from base64 data
@@ -253,236 +240,234 @@ export default function EnhancePage() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 py-20">
         <div className="max-w-4xl mx-auto p-6 space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          AI Photo Enhancement
-        </h1>
-        <p className="text-xl text-gray-600">
-          Transform your photos to iPhone 14 Pro Max quality with AI
-        </p>
-      </div>
-
-      {/* Backend Status */}
-      <BackendStatus />
-
-      {/* Upload Area */}
-      <Card>
-        <CardContent className="p-8">
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
-              isDragActive
-                ? "border-purple-500 bg-purple-50"
-                : "border-gray-300 hover:border-purple-400 hover:bg-gray-50"
-            } ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            <input {...getInputProps()} />
-
-            <motion.div
-              animate={isDragActive ? { scale: 1.05 } : { scale: 1 }}
-              className="space-y-4"
-            >
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
-                <Upload className="w-8 h-8 text-purple-600" />
-              </div>
-
-              <div>
-                <p className="text-lg font-semibold text-gray-900">
-                  {isDragActive ? "Drop your photo here" : "Upload a photo to enhance"}
-                </p>
-                <p className="text-gray-500 mt-2">
-                  Drag & drop or click to select • Max 8MB • JPG, PNG, WebP
-                </p>
-              </div>
-            </motion.div>
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              AI Photo Enhancement
+            </h1>
+            <p className="text-xl text-gray-600">
+              Transform your photos to iPhone 14 Pro Max quality with AI
+            </p>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Processing Progress */}
-      {isProcessing && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-purple-600 animate-spin" />
-                <span className="font-medium">
-Enhancing with AI...
-                </span>
+          {/* Backend Status */}
+          <BackendStatus />
+
+          {/* Upload Area */}
+          <Card>
+            <CardContent className="p-8">
+              <div className={`border-2 border-dashed rounded-xl p-12 text-center transition-all border-gray-300 hover:border-purple-400 hover:bg-gray-50 ${isProcessing ? "opacity-50" : ""}`}>
+                <div className="space-y-4">
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
+                    <Upload className="w-8 h-8 text-purple-600" />
+                  </div>
+
+                  <div>
+                    <p className="text-lg font-semibold text-gray-900">
+                      Upload a photo to enhance
+                    </p>
+                    <p className="text-gray-500 mt-2">
+                      Select a photo • Max 8MB • JPG, PNG, WebP
+                    </p>
+                  </div>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    disabled={isProcessing}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                  />
+                </div>
               </div>
-              <Progress value={progress} className="w-full" />
-              <p className="text-sm text-gray-600">
-                This may take a few seconds depending on image complexity
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
 
-      {/* Error Display */}
-      {error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 text-red-700">
-              <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs">!</span>
-              </div>
-              <span className="font-medium">{error}</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Results Display */}
-      {result && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-purple-600" />
-              Enhancement Complete!
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Before/After Comparison */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-center text-gray-800">🔍 Before & After Comparison</h3>
-
-              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                {/* Enhancement Info Header */}
-                <div className="mb-4 text-center">
-                  <h4 className="text-lg font-semibold text-gray-800">
-                    📷 {result.originalFilename || 'Enhanced Photo'}
-                  </h4>
+          {/* Processing Progress */}
+          {isProcessing && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-purple-600 animate-spin" />
+                    <span className="font-medium">
+                      Enhancing with AI...
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
                   <p className="text-sm text-gray-600">
-                    Processing time: {result.processingTime?.toFixed(2)}s • {result.enhancementsApplied?.length} enhancements applied
+                    This may take a few seconds depending on image complexity
                   </p>
                 </div>
+              </CardContent>
+            </Card>
+          )}
 
-                {/* Images Grid */}
-                <div className="grid lg:grid-cols-2 gap-6">
-                  {/* Original */}
-                  <div className="space-y-3">
-                    <h5 className="font-semibold text-gray-700 text-center flex items-center justify-center gap-2">
-                      📸 Original Image
-                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Before</span>
-                    </h5>
-                    <div className="relative rounded-xl overflow-hidden border-2 border-gray-300 shadow-md hover:shadow-lg transition-shadow">
-                      <img
-                        src={result.originalUrl}
-                        alt="Original photo"
-                        className="w-full h-auto max-h-96 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
-                        onError={(e) => {
-                          console.error('Failed to load original image');
-                          e.currentTarget.style.display = 'none';
-                        }}
-                        onLoad={() => console.log('Original image loaded successfully')}
-                        onClick={() => setPreviewModal({
-                          isOpen: true,
-                          imageData: result.originalUrl.split(',')[1] || result.originalUrl,
-                          title: `Original - ${result.originalFilename || 'Photo'}`,
-                          type: 'original'
-                        })}
-                      />
-                      <div className="absolute top-3 left-3 bg-gray-800 bg-opacity-80 text-white text-sm px-3 py-1 rounded-full">
-                        📸 Original
+          {/* Error Display */}
+          {error && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 text-red-700">
+                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">!</span>
+                  </div>
+                  <span className="font-medium">{error}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Results Display */}
+          {result && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-purple-600" />
+                  Enhancement Complete!
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Before/After Comparison */}
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-center text-gray-800">🔍 Before & After Comparison</h3>
+
+                  <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                    {/* Enhancement Info Header */}
+                    <div className="mb-4 text-center">
+                      <h4 className="text-lg font-semibold text-gray-800">
+                        📷 {result.originalFilename || 'Enhanced Photo'}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        Processing time: {result.processingTime?.toFixed(2)}s • {result.enhancementsApplied?.length} enhancements applied
+                      </p>
+                    </div>
+
+                    {/* Images Grid */}
+                    <div className="grid lg:grid-cols-2 gap-6">
+                      {/* Original */}
+                      <div className="space-y-3">
+                        <h5 className="font-semibold text-gray-700 text-center flex items-center justify-center gap-2">
+                          📸 Original Image
+                          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Before</span>
+                        </h5>
+                        <div className="relative rounded-xl overflow-hidden border-2 border-gray-300 shadow-md hover:shadow-lg transition-shadow">
+                          <img
+                            src={result.originalUrl}
+                            alt="Original photo"
+                            className="w-full h-auto max-h-96 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
+                            onError={(e) => {
+                              console.error('Failed to load original image');
+                              e.currentTarget.style.display = 'none';
+                            }}
+                            onLoad={() => console.log('Original image loaded successfully')}
+                            onClick={() => setPreviewModal({
+                              isOpen: true,
+                              imageData: result.originalUrl.split(',')[1] || result.originalUrl,
+                              title: `Original - ${result.originalFilename || 'Photo'}`,
+                              type: 'original'
+                            })}
+                          />
+                          <div className="absolute top-3 left-3 bg-gray-800 bg-opacity-80 text-white text-sm px-3 py-1 rounded-full">
+                            📸 Original
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Enhanced */}
+                      <div className="space-y-3">
+                        <h5 className="font-semibold text-purple-700 text-center flex items-center justify-center gap-2">
+                          ✨ Enhanced Image
+                          <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">After AI</span>
+                        </h5>
+                        <div className="relative rounded-xl overflow-hidden border-2 border-purple-300 shadow-md hover:shadow-lg transition-shadow">
+                          <img
+                            src={result.enhancedBase64 ? `data:image/jpeg;base64,${result.enhancedBase64}` : result.enhancedUrl}
+                            alt="Enhanced photo"
+                            className="w-full h-auto max-h-96 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
+                            onError={(e) => {
+                              console.error('Failed to load enhanced image');
+                              console.log('Enhanced base64 length:', result.enhancedBase64?.length);
+                              e.currentTarget.style.display = 'none';
+                            }}
+                            onLoad={(e) => {
+                              console.log('Enhanced image loaded successfully');
+                              console.log('Enhanced image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+                            }}
+                            onClick={() => setPreviewModal({
+                              isOpen: true,
+                              imageData: result.enhancedBase64 || (result.enhancedUrl?.split(',')[1] || result.enhancedUrl || ''),
+                              title: `Enhanced - ${result.originalFilename || 'Photo'}`,
+                              type: 'enhanced'
+                            })}
+                          />
+                          <div className="absolute top-3 left-3 bg-purple-600 text-white text-xs px-2 py-1 rounded shadow-lg">
+                            ✨ AI Enhanced
+                          </div>
+                          <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded shadow-lg">
+                            Enhanced Quality
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Enhanced */}
-                  <div className="space-y-3">
-                    <h5 className="font-semibold text-purple-700 text-center flex items-center justify-center gap-2">
-                      ✨ Enhanced Image
-                      <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">After AI</span>
-                    </h5>
-                    <div className="relative rounded-xl overflow-hidden border-2 border-purple-300 shadow-md hover:shadow-lg transition-shadow">
-                      <img
-                        src={result.enhancedBase64 ? `data:image/jpeg;base64,${result.enhancedBase64}` : result.enhancedUrl}
-                        alt="Enhanced photo"
-                        className="w-full h-auto max-h-96 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
-                        onError={(e) => {
-                          console.error('Failed to load enhanced image');
-                          console.log('Enhanced base64 length:', result.enhancedBase64?.length);
-                          e.currentTarget.style.display = 'none';
-                        }}
-                        onLoad={(e) => {
-                          console.log('Enhanced image loaded successfully');
-                          console.log('Enhanced image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
-                        }}
-                        onClick={() => setPreviewModal({
-                          isOpen: true,
-                          imageData: result.enhancedBase64 || (result.enhancedUrl?.split(',')[1] || result.enhancedUrl || ''),
-                          title: `Enhanced - ${result.originalFilename || 'Photo'}`,
-                          type: 'enhanced'
-                        })}
-                      />
-                      {/* Move overlays to top to avoid hiding enhancement effects */}
-                      <div className="absolute top-3 left-3 bg-purple-600 text-white text-xs px-2 py-1 rounded shadow-lg">
-                        ✨ AI Enhanced
-                      </div>
-                      <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded shadow-lg">
-                        Enhanced Quality
-                      </div>
+                    {/* Quick Download */}
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        onClick={downloadEnhanced}
+                        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                      >
+                        📥 Download Enhanced Image
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Quick Download */}
-                <div className="mt-4 flex justify-center">
-                  <button
-                    onClick={downloadEnhanced}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-                  >
-                    📥 Download Enhanced Image
-                  </button>
+                {/* Enhancement Details */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold mb-3">Enhancements Applied:</h4>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {result.enhancementsApplied.map((enhancement, index) => (
+                      <span
+                        key={index}
+                        className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {enhancement.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Processing time: {result.processingTime.toFixed(2)}s
+                  </p>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+          )}
 
-            {/* Enhancement Details */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-semibold mb-3">Enhancements Applied:</h4>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {result.enhancementsApplied.map((enhancement, index) => (
-                  <span
-                    key={index}
-                    className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium"
-                  >
-                    {enhancement.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </span>
+          {/* Features Info */}
+          <Card className="bg-gradient-to-r from-purple-50 to-blue-50">
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-4 text-center">AI Enhancement Features</h3>
+              <div className="grid md:grid-cols-3 gap-4">
+                {[
+                  { icon: Sparkles, title: "Smart Enhancement", desc: "AI analyzes and improves quality automatically" },
+                  { icon: Zap, title: "Lightning Fast", desc: "Get results in seconds with powerful AI" },
+                  { icon: ImageIcon, title: "Professional Quality", desc: "iPhone 14 Pro Max level enhancement" }
+                ].map((feature, index) => (
+                  <div key={index} className="text-center">
+                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <feature.icon className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <h4 className="font-medium mb-2">{feature.title}</h4>
+                    <p className="text-sm text-gray-600">{feature.desc}</p>
+                  </div>
                 ))}
               </div>
-              <p className="text-sm text-gray-600">
-                Processing time: {result.processingTime.toFixed(2)}s
-              </p>
-            </div>
-
-            {/* Enhancement Details moved below */}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Features Info */}
-      <Card className="bg-gradient-to-r from-purple-50 to-blue-50">
-        <CardContent className="p-6">
-          <h3 className="font-semibold mb-4 text-center">AI Enhancement Features</h3>
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              { icon: Sparkles, title: "Smart Enhancement", desc: "AI analyzes and improves quality automatically" },
-              { icon: Zap, title: "Lightning Fast", desc: "Get results in seconds with powerful AI" },
-              { icon: ImageIcon, title: "Professional Quality", desc: "iPhone 14 Pro Max level enhancement" }
-            ].map((feature, index) => (
-              <div key={index} className="text-center">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <feature.icon className="w-6 h-6 text-purple-600" />
-                </div>
-                <h4 className="font-medium mb-2">{feature.title}</h4>
-                <p className="text-sm text-gray-600">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -542,5 +527,3 @@ Enhancing with AI...
     </>
   );
 }
-
-// Metadata moved to layout.tsx since this is a client component
