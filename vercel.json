@@ -1,5 +1,4 @@
 {
-  "version": 2,
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -12,13 +11,9 @@
   },
   "functions": {
     "backend/api/index.py": {
-      "runtime": "@vercel/python",
       "maxDuration": 60,
       "memory": 1024
     }
   },
-  "regions": ["iad1"],
-  "github": {
-    "autoAlias": false
-  }
+  "regions": ["iad1"]
 }
