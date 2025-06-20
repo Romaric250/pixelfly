@@ -27,7 +27,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "deploy": "bash scripts/deploy.sh",
+    "deploy:vercel": "vercel --prod",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

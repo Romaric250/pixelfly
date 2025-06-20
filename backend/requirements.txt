@@ -1,37 +1,24 @@
-# Flask Backend Requirements for PixelFly
+# Flask Backend Requirements for PixelFly - Production Ready
 Flask==2.3.3
 Flask-CORS==4.0.0
-Flask-RESTful==0.3.10
 python-dotenv==1.0.0
 
-# Image Processing
+# Production WSGI Servers
+gunicorn==21.2.0  # For Linux/macOS
+waitress==2.1.2   # For Windows
+
+# Core Image Processing (Vercel Compatible)
 Pillow==10.0.1
-opencv-python==4.8.1.78
 numpy==1.24.3
-
-# AI/ML Libraries
-google-generativeai==0.3.2
-langchain==0.0.335
-langchain-google-genai==0.0.6
-langgraph==0.0.26
-
-# Alternative AI Libraries (commented for flexibility)
-# openai==1.3.5
-# anthropic==0.7.8
-# replicate==0.15.4
-
-# Image Enhancement Libraries
-scikit-image==0.21.0
-imageio==2.31.5
 
 # HTTP Requests
 requests==2.31.0
-urllib3==2.0.7
 
-# Async Support
-aiohttp==3.9.1
-asyncio==3.4.3
+# Note: Heavy libraries like opencv-python, scikit-image, and AI libraries
+# are commented out for Vercel deployment to avoid size limits
+# Uncomment if deploying to a different platform with more resources
 
-# Utilities
-python-magic==0.4.27
-uuid==1.30
+# opencv-python==4.8.1.78
+# google-generativeai==0.3.2
+# langchain==0.0.335
+# scikit-image==0.21.0

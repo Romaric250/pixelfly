@@ -527,5 +527,15 @@ def watermark_photos():
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
-    print("Starting simple server on port 5001")
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    import os
+    port = int(os.getenv('PORT', 5001))
+    debug = os.getenv('FLASK_ENV') == 'development'
+
+    if debug:
+        print(f"🔧 Starting development server on port {port}")
+        print("⚠️  WARNING: This is a development server. Do not use it in production!")
+        print("🚀 For production, use: gunicorn -c gunicorn.conf.py wsgi:application")
+    else:
+        print(f"🚀 Starting production server on port {port}")
+
+    app.run(host='0.0.0.0', port=port, debug=debug)
