@@ -1,15 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import base64
-import numpy as np
 from io import BytesIO
 from PIL import Image, ImageEnhance, ImageFilter, ImageDraw, ImageFont
-import requests
 import os
-import sys
-
-# Add the backend directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 app = Flask(__name__)
 CORS(app, origins=["*"])
@@ -28,22 +22,29 @@ def enhance_image_smart(image_base64):
         if image.mode != 'RGB':
             image = image.convert('RGB')
         
-        # Analyze image characteristics
-        img_array = np.array(image)
-        brightness = np.mean(img_array)
-        contrast = np.std(img_array)
-        
+        # Analyze image characteristics using PIL
+        # Convert to grayscale for analysis
+        gray = image.convert('L')
+        histogram = gray.histogram()
+
+        # Calculate brightness (average pixel value)
+        total_pixels = sum(histogram)
+        brightness = sum(i * histogram[i] for i in range(256)) / total_pixels
+
+        # Simple contrast estimation
+        contrast = max(histogram) - min(histogram)
+
         print(f"📊 Image analysis - Brightness: {brightness:.1f}, Contrast: {contrast:.1f}")
-        
+
         # Adaptive enhancement based on image characteristics
         enhanced = image.copy()
-        
+
         # Smart contrast enhancement
-        if contrast < 50:  # Low contrast image
+        if contrast < 1000:  # Low contrast image
             contrast_enhancer = ImageEnhance.Contrast(enhanced)
             enhanced = contrast_enhancer.enhance(1.3)
             print("🔧 Applied contrast enhancement")
-        
+
         # Smart brightness adjustment
         if brightness < 100:  # Dark image
             brightness_enhancer = ImageEnhance.Brightness(enhanced)
@@ -112,15 +113,7 @@ def enhance_photo():
 
         # Track enhancement operation (optional - may fail in serverless)
         try:
-            track_data = {
-                "userId": user_id,
-                "filename": "enhanced_image.jpg",
-                "processingTime": 1.0,
-                "enhancementType": "smart_enhancement",
-                "success": True
-            }
-            # Note: This may not work in serverless environment
-            print("✅ Enhancement operation completed")
+            print(f"✅ Enhancement operation completed for user: {user_id}")
         except Exception as e:
             print(f"⚠️ Failed to track enhancement: {e}")
 
@@ -131,33 +124,31 @@ def enhance_photo():
         return jsonify({"success": False, "error": str(e)}), 500
 
 # Watermarking functions (simplified for serverless)
-def smart_adaptive_placement(image, text, size):
-    """AI-powered smart placement that avoids important content"""
-    img_array = np.array(image.convert('RGB'))
-    gray = np.mean(img_array, axis=2)
-    
-    h, w = gray.shape
+def smart_adaptive_placement(image, text=None, size=None):
+    """Simplified smart placement for serverless"""
+    w, h = image.size
+
+    # Define potential zones for watermark placement
     zones = [
         (w-200, h-100, w-20, h-20),    # bottom right
-        (20, h-100, 200, h-20),        # bottom left  
+        (20, h-100, 200, h-20),        # bottom left
         (w-200, 20, w-20, 100),        # top right
         (20, 20, 200, 100),            # top left
         (w//2-100, h//2-50, w//2+100, h//2+50),  # center
     ]
-    
-    best_zone = zones[0]  # default to bottom right
-    min_variance = float('inf')
-    
-    for zone in zones:
-        x1, y1, x2, y2 = zone
-        if x2 < w and y2 < h and x1 >= 0 and y1 >= 0:
-            region = gray[y1:y2, x1:x2]
-            variance = np.var(region)
-            if variance < min_variance:
-                min_variance = variance
-                best_zone = zone
-    
-    return best_zone
+
+    # For simplicity in serverless, just return bottom right
+    # In a full implementation, we'd analyze image content
+    best_zone = zones[0]  # bottom right
+
+    # Ensure zone is within image bounds
+    x1, y1, x2, y2 = best_zone
+    x1 = max(0, min(x1, w-20))
+    y1 = max(0, min(y1, h-20))
+    x2 = max(x1+20, min(x2, w))
+    y2 = max(y1+20, min(y2, h))
+
+    return (x1, y1, x2, y2)
 
 def apply_watermark_style(overlay, text, position, style, opacity, size, color="white"):
     """Apply watermark styles"""
