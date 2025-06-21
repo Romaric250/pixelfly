@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Eye, EyeOff, User, Sparkles } from "lucide-react";
 import { signIn, signUp } from "@/lib/auth-client";
+import { backendClient } from "@/lib/backend-client";
 import Link from "next/link";
 
 interface InnovativeAuthPageProps {
@@ -39,6 +40,10 @@ export function InnovativeAuthPage({ mode }: InnovativeAuthPageProps) {
 
       if (result.error) {
         setError(result.error.message || `Failed to ${isSignUp ? "sign up" : "sign in"} with Google`);
+      } else {
+        // Refresh stats after successful authentication
+        console.log('🔄 Refreshing stats after Google auth...');
+        await backendClient.refreshStats();
       }
     } catch (err) {
       setError(`Failed to ${isSignUp ? "sign up" : "sign in"} with Google`);
@@ -83,6 +88,9 @@ export function InnovativeAuthPage({ mode }: InnovativeAuthPageProps) {
         setError(result.error.message || (isSignUp ? "Failed to create account" : "Invalid email or password"));
       } else {
         setShowEmailModal(false);
+        // Refresh stats after successful authentication
+        console.log('🔄 Refreshing stats after email auth...');
+        await backendClient.refreshStats();
         // Redirect to home page
         window.location.href = "/";
       }

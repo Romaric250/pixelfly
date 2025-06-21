@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
+// Force dynamic rendering - no caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     console.log("📊 Fetching real-time stats from database...");
@@ -37,7 +41,16 @@ export async function GET() {
     };
 
     console.log("✅ Stats fetched successfully:", stats);
-    return NextResponse.json(stats);
+
+    // Return with no-cache headers to prevent caching
+    return NextResponse.json(stats, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store',
+      },
+    });
 
   } catch (error) {
     console.error("❌ Error fetching stats:", error);
@@ -50,6 +63,15 @@ export async function GET() {
     };
 
     console.log("⚠️ Using fallback stats:", fallbackStats);
-    return NextResponse.json(fallbackStats);
+
+    // Return fallback stats with no-cache headers
+    return NextResponse.json(fallbackStats, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store',
+      },
+    });
   }
 }

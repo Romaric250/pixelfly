@@ -21,10 +21,23 @@ export function LandingStats() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/stats');
+        // Add timestamp to prevent caching
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/stats?t=${timestamp}`, {
+          method: 'GET',
+          cache: 'no-store', // Always fetch fresh data
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           setStats(data);
+          console.log('📊 Stats updated:', data);
+        } else {
+          console.error('Failed to fetch stats:', response.status, response.statusText);
         }
       } catch (error) {
         console.error('Failed to fetch stats:', error);
@@ -33,7 +46,28 @@ export function LandingStats() {
       }
     };
 
+    // Initial fetch
     fetchStats();
+
+    // Set up periodic refresh every 10 seconds for real-time updates
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refreshing stats...');
+      fetchStats();
+    }, 10000);
+
+    // Listen for custom stats update events
+    const handleStatsUpdate = (event: CustomEvent) => {
+      console.log('📊 Received stats update event:', event.detail);
+      setStats(event.detail);
+    };
+
+    window.addEventListener('statsUpdated', handleStatsUpdate as EventListener);
+
+    // Cleanup interval and event listener on unmount
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('statsUpdated', handleStatsUpdate as EventListener);
+    };
   }, []);
 
   const formatNumber = (num: number) => {

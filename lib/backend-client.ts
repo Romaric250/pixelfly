@@ -80,6 +80,35 @@ class BackendClient {
     }
   }
 
+  async refreshStats(): Promise<void> {
+    try {
+      console.log('🔄 Triggering stats refresh...');
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/stats?t=${timestamp}`, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📊 Stats refreshed:', data);
+
+        // Dispatch a custom event to notify components that stats have been updated
+        window.dispatchEvent(new CustomEvent('statsUpdated', { detail: data }));
+      } else {
+        console.error('Failed to refresh stats:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Failed to refresh stats:', error);
+    }
+  }
+
   /**
    * Enhance a single photo using AI
    */
