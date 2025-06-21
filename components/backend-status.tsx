@@ -13,13 +13,13 @@ export function BackendStatus() {
     const checkBackend = async () => {
       const url = process.env.NEXT_PUBLIC_BACKEND_URL || (
         process.env.NODE_ENV === 'production'
-          ? 'https://pixelfly-backend.vercel.app'
-          : 'http://127.0.0.1:5001'
+          ? 'https://pixelfly.onrender.com'
+          : 'https://pixelfly.onrender.com'
       );
       setBackendUrl(url);
       
       try {
-        const response = await fetch(`${url}/api/health`, {
+        const response = await fetch(`${url}/health`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

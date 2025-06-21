@@ -58,10 +58,10 @@ class BackendClient {
     // Use environment variable or fallback based on environment
     if (process.env.NODE_ENV === 'production') {
       // In production, use Vercel deployment URL
-      this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://pixelfly-backend.vercel.app';
+      this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://pixelfly.onrender.com';
     } else {
       // In development, use local backend
-      this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
+      this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://pixelfly.onrender.com';
     }
     console.log('Backend client initialized with URL:', this.baseUrl);
   }

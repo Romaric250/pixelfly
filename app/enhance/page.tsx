@@ -77,7 +77,7 @@ export default function EnhancePage() {
 
       // Test backend connection first
       console.log('Testing backend connection...');
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://pixelfly.onrender.com';
       console.log('Backend URL:', backendUrl);
 
       try {
@@ -89,7 +89,7 @@ export default function EnhancePage() {
         }
       } catch (healthError) {
         console.error('Health check failed:', healthError);
-        throw new Error('Backend is not accessible. Please make sure it\'s running on port 5001.');
+        throw new Error('Backend is not accessible. Please make sure it\'s running.');
       }
 
       // Determine if we have base64 or URL

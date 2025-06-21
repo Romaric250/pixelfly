@@ -32,8 +32,8 @@ DATABASE_URL=your-mongodb-connection-string
 # GitHub Stats (for landing page)
 GITHUB_TOKEN=your-github-token
 
-# Backend URL (if using external backend)
-NEXT_PUBLIC_BACKEND_URL=https://pixelfly-pi.vercel.app
+# Backend URL (Python API on Render)
+NEXT_PUBLIC_BACKEND_URL=https://pixelfly.onrender.com
 ```
 
 ## How to Set Environment Variables in Vercel
