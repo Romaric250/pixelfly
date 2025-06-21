@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';  
+import Link from 'next/link';
 
 interface BeforeAfterImage {
   id: string;
@@ -66,8 +67,8 @@ export function BeforeAfterShowcase() {
             See the <span className="bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">Magic</span> in Action
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Transform your everyday photos into professional-quality images with our advanced AI technology. 
-            See real examples of how PixelFly enhances photos instantly.
+            Make your everyday photos pop out with stunning clarity and vibrant colors using our advanced AI technology.
+            See real examples of how PixelFly transforms photos instantly.
           </p>
         </motion.div>
 
@@ -167,7 +168,10 @@ export function BeforeAfterShowcase() {
                   onMouseLeave={() => setIsHovering(false)}
                 >
                   <Sparkles className={`w-4 h-4 mr-2 transition-transform ${isHovering ? 'rotate-12' : ''}`} />
+
+                  <Link href="/enhance">  
                   Try PixelFly Now
+                  </Link>
                 </Button>
               </div>
             </div>

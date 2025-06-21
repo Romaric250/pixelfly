@@ -11,21 +11,15 @@ export function LandingHero() {
   const heroImages = [
     {
       id: 1,
-      before: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=face&blur=3&sat=-60&bri=-40',
-      after: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=face&auto=enhance&sharp=50&sat=30&bri=20',
+      after: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=face&blur=3&sat=-60&bri=-40',
+      before: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=face&auto=enhance&sharp=50&sat=30&bri=20',
       title: 'Portrait Enhancement'
     },
     {
       id: 2,
-      before: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop&blur=2&sat=-50&bri=-30',
-      after: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop&auto=enhance&sharp=40&sat=40&bri=25',
+      after: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop&blur=2&sat=-50&bri=-30',
+      before: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop&auto=enhance&sharp=40&sat=40&bri=25',
       title: 'Landscape Magic'
-    },
-    {
-      id: 3,
-      before: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=800&h=600&fit=crop&blur=1&sat=-70&bri=-40',
-      after: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=800&h=600&fit=crop&auto=enhance&sharp=35&sat=60&bri=30',
-      title: 'Food Photography'
     }
   ];
 
@@ -79,9 +73,11 @@ export function LandingHero() {
               transition={{ duration: 0.8, delay: 0.3 }}
               className="text-5xl md:text-7xl font-bold text-gray-900 leading-[0.9] tracking-tight"
             >
-              Transform Any Photo Into
-              <span className="block bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 bg-clip-text text-transparent mt-2">
-                iPhone 14 Pro Max Quality
+              <span className="block bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 bg-clip-text text-transparent">
+                Make Your Photos
+              </span>
+              <span className="block text-gray-900 mt-2">
+                Pop Out
               </span>
             </motion.h1>
 
@@ -92,7 +88,7 @@ export function LandingHero() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="text-xl text-gray-600 leading-relaxed max-w-lg"
             >
-              Upload any photo and watch our advanced AI enhance it to professional quality in seconds. Plus bulk watermarking for all your photos.
+              Upload any photo and watch our advanced AI make it pop out with stunning clarity and vibrant colors. Plus bulk watermarking for all your photos.
               <span className="block mt-3 font-semibold text-purple-600">
                 ✨ Enhancement • Watermarking • Completely Free
               </span>
@@ -323,9 +319,8 @@ export function LandingHero() {
               </Button>
               <Button
                 size="lg"
-                variant="outline"
                 asChild
-                className="border-white/30 text-white hover:bg-white/10 font-semibold px-8 py-3 rounded-2xl"
+                className="bg-white text-purple-600 hover:bg-purple-50 font-semibold px-8 py-3 rounded-2xl"
               >
                 <Link href="/watermark">
                   Bulk Watermark

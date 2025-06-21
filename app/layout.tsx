@@ -18,8 +18,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'PixelFly - Transform Any Photo Into iPhone Quality',
-  description: 'AI-powered photo enhancement that transforms budget phone photos into professional quality images. Open source and privacy-first.',
+  title: 'PixelFly - Make Your Photos Pop Out',
+  description: 'AI-powered photo enhancement that makes your photos pop out with stunning clarity and vibrant colors. Open source and privacy-first.',
 };
 
 export default function RootLayout({

@@ -277,7 +277,7 @@ export function PhotoEnhancer() {
             {[
               { icon: Sparkles, title: "Smart Enhancement", desc: "AI analyzes and improves quality automatically" },
               { icon: Zap, title: "Lightning Fast", desc: "Get results in seconds with powerful AI" },
-              { icon: ImageIcon, title: "Professional Quality", desc: "iPhone 14 Pro Max level enhancement" }
+              { icon: ImageIcon, title: "Professional Quality", desc: "Make your photos pop out with stunning results" }
             ].map((feature, index) => (
               <div key={index} className="text-center">
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">

@@ -5,31 +5,25 @@ import { motion } from 'framer-motion';
 import { ImageComparisonSlider } from '@/components/ui/image-comparison-slider';
 import { Play, Pause, RotateCcw, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { before } from 'node:test';
 
 const demoImages = [
   {
     id: 'portrait',
     title: 'Portrait Enhancement',
     description: 'Professional headshot quality from any selfie',
-    before: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=450&fit=crop&crop=face&blur=2&sat=-40&bri=-25',
-    after: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=450&fit=crop&crop=face&auto=enhance&sharp=40&sat=25&bri=15',
+    after: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=450&fit=crop&crop=face&blur=2&sat=-40&bri=-25',
+    before: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=450&fit=crop&crop=face&auto=enhance&sharp=40&sat=25&bri=15',
     category: 'Portrait'
   },
   {
     id: 'landscape',
     title: 'Landscape Perfection',
     description: 'Transform ordinary scenes into breathtaking vistas',
-    before: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=450&fit=crop&blur=1&sat=-50&bri=-30',
-    after: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=450&fit=crop&auto=enhance&sharp=35&sat=40&bri=20',
+    after: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=450&fit=crop&blur=1&sat=-50&bri=-30',
+    before: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=450&fit=crop&auto=enhance&sharp=35&sat=40&bri=20',
     category: 'Landscape'
-  },
-  {
-    id: 'food',
-    title: 'Food Photography',
-    description: 'Make every meal look Instagram-worthy',
-    before: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=450&fit=crop&blur=1&sat=-60&bri=-35',
-    after: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=450&fit=crop&auto=enhance&sharp=30&sat=50&bri=25',
-    category: 'Food'
   }
 ];
 
@@ -171,7 +165,11 @@ export function InteractiveDemo() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white">
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Enhance Your Photos
+
+                   <Link href="/enhance">  
+                Enhance Your Photos
+                </Link>
+                 
                 </Button>
                 <Button variant="outline" className="flex-1">
                   Learn More
@@ -200,7 +198,11 @@ export function InteractiveDemo() {
               size="lg"
               className="bg-white text-purple-600 hover:bg-purple-50 font-semibold px-8 py-3"
             >
-              Start Enhancing Now
+
+              <Link href="/enhance">  
+                Start Enhancing Now
+                </Link>
+            
             </Button>
           </div>
         </motion.div>

@@ -1,6 +1,6 @@
 # PixelFly 🚀
 
-Transform any photo into iPhone 14 Pro Max quality with AI-powered enhancement. Simple, fast, and completely free.
+Make your photos pop out with AI-powered enhancement. Simple, fast, and completely free.
 
 ## ✨ Features
 

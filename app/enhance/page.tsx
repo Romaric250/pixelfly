@@ -276,7 +276,7 @@ export default function EnhancePage() {
               AI Photo Enhancement
             </h1>
             <p className="text-xl text-gray-600 mb-4">
-              Transform your photos to iPhone 14 Pro Max quality with AI
+              Make your photos pop out with AI-powered enhancement
             </p>
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6 max-w-2xl mx-auto">
               <p className="text-purple-800 text-sm">
@@ -492,7 +492,7 @@ export default function EnhancePage() {
                 {[
                   { icon: Sparkles, title: "Smart Enhancement", desc: "AI analyzes and improves quality automatically" },
                   { icon: Zap, title: "Lightning Fast", desc: "Get results in seconds with powerful AI" },
-                  { icon: ImageIcon, title: "Professional Quality", desc: "iPhone 14 Pro Max level enhancement" }
+                  { icon: ImageIcon, title: "Professional Quality", desc: "Make your photos pop out with stunning results" }
                 ].map((feature, index) => (
                   <div key={index} className="text-center">
                     <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
