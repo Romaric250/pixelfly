@@ -90,7 +90,6 @@ export function BackendStatus() {
             {getStatusIcon()}
             <div>
               <p className="font-medium">Backend Status</p>
-              {/* <p className="text-sm text-gray-600">{backendUrl}</p> */}
             </div>
           </div>
           <Badge className={getStatusColor()}>
