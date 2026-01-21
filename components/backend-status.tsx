@@ -90,7 +90,7 @@ export function BackendStatus() {
             {getStatusIcon()}
             <div>
               <p className="font-medium">Backend Status</p>
-              <p className="text-sm text-gray-600">{backendUrl}</p>
+              {/* <p className="text-sm text-gray-600">{backendUrl}</p> */}
             </div>
           </div>
           <Badge className={getStatusColor()}>
@@ -103,7 +103,7 @@ export function BackendStatus() {
               <strong>Backend not running!</strong> Please start the Flask backend:
             </p>
             <code className="block mt-2 p-2 bg-red-100 rounded text-sm">
-              cd backend && python app.py
+          Contact Admin for support
             </code>
           </div>
         )}

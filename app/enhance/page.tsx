@@ -287,7 +287,7 @@ export default function EnhancePage() {
           </div>
 
           {/* Backend Status */}
-          <BackendStatus />
+          {/* <BackendStatus /> */}
 
           {/* Upload Area */}
           <Card>
