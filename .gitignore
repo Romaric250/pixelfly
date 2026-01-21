@@ -44,3 +44,8 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+
+
+# all markdown files except README.md
+*.md
+!README.md

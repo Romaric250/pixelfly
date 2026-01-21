@@ -1,46 +1,72 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-// import { Progress } from "@/components/ui/progress"; // Temporarily commented out
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Sparkles, Download, Zap, Image as ImageIcon } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Navbar } from "@/components/navbar";
 import { backendClient } from "@/lib/backend-client";
 import { useSession } from "@/lib/auth-client";
-import { Navbar } from "@/components/navbar";
-import { BackendStatus } from "@/components/backend-status";
+import { 
+  Send, 
+  Image as ImageIcon, 
+  Sparkles, 
+  Download, 
+  Loader2,
+  Upload,
+  X
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface EnhancementResult {
-  originalUrl: string;
-  enhancedUrl?: string;
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  type: "text" | "image" | "enhancement";
+  content?: string;
+  imageUrl?: string;
+  originalImageUrl?: string;
+  enhancedImageUrl?: string;
   enhancedBase64?: string;
-  originalFilename?: string;
-  processingTime: number;
-  enhancementsApplied: string[];
+  filename?: string;
+  processingTime?: number;
+  enhancementsApplied?: string[];
+  timestamp: Date;
+  isProcessing?: boolean;
 }
 
 export default function EnhancePage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      type: "text",
+      content: "👋 Hi! I'm your AI photo enhancement assistant. Upload a photo and I'll make it pop with stunning clarity and vibrant colors!",
+      timestamp: new Date(),
+    },
+  ]);
+  const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [result, setResult] = useState<EnhancementResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [previewModal, setPreviewModal] = useState<{isOpen: boolean, imageData: string, title: string, type: 'original' | 'enhanced'}>({
-    isOpen: false,
-    imageData: '',
-    title: '',
-    type: 'original'
-  });
+  const [dragActive, setDragActive] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Authentication check - redirect to sign-in if not authenticated
+  // Authentication check
   useEffect(() => {
     if (!isPending && !session) {
-      router.push('/sign-in');
+      router.push("/sign-in");
     }
   }, [session, isPending, router]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   // Show loading while checking authentication
   if (isPending) {
@@ -59,508 +85,457 @@ export default function EnhancePage() {
     );
   }
 
-  // Don't render if not authenticated (will redirect)
   if (!session) {
     return null;
   }
 
-  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
 
-    setError(null);
-    setResult(null);
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
+  };
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      addMessage("assistant", "text", "Please upload an image file (JPG, PNG, WebP).");
+      return;
+    }
+
+    // Add user message with image preview
+    const userMessageId = `user-${Date.now()}`;
+    const imageUrl = URL.createObjectURL(file);
+    
+    addMessage("user", "image", undefined, imageUrl, undefined, undefined, file.name);
+
+    // Add processing message
+    const processingId = `processing-${Date.now()}`;
+    addMessage("assistant", "enhancement", undefined, undefined, undefined, undefined, undefined, undefined, undefined, true);
+
     setIsProcessing(true);
-    setProgress(0);
 
     try {
-      const file = files[0];
-      console.log('Processing file directly:', file.name, file.size);
-
-      // Convert file to base64 directly
+      // Convert file to base64
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
           const base64Data = e.target?.result as string;
-          console.log('File converted to base64, length:', base64Data.length);
-          await processEnhancement(base64Data, file.name);
+          const base64 = base64Data.split(",")[1];
+
+          // Test backend connection
+          const backendUrl = "http://localhost:5000"
+          // const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://pixelfly.onrender.com";
+          console.log("Backend URL:", backendUrl);
+          try {
+            await fetch(`${backendUrl}/health`);
+          } catch {
+            throw new Error("Backend is not accessible. Please make sure it's running.");
+          }
+
+          // Process enhancement
+          const request = {
+            user_id: session?.user?.id || "anonymous",
+            enhancement_type: "auto",
+            return_format: "base64" as const,
+            image_base64: base64,
+          };
+
+          const enhancementResult = await backendClient.enhancePhotoWithProgress(
+            request,
+            (progress) => {
+              // Update progress in processing message
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === processingId
+                    ? { ...msg, content: `Processing... ${Math.round(progress)}%` }
+                    : msg
+                )
+              );
+            }
+          );
+
+          if (enhancementResult.success) {
+            let enhancedBase64 = enhancementResult.enhanced_base64;
+            if (enhancedBase64?.startsWith("data:")) {
+              enhancedBase64 = enhancedBase64.split(",")[1];
+            }
+
+            // Remove processing message and add result
+            setMessages((prev) =>
+              prev
+                .filter((msg) => msg.id !== processingId)
+                .map((msg) =>
+                  msg.id === userMessageId
+                    ? {
+                        ...msg,
+                        originalImageUrl: imageUrl,
+                      }
+                    : msg
+                )
+                .concat({
+                  id: `enhanced-${Date.now()}`,
+                  role: "assistant",
+                  type: "enhancement",
+                  originalImageUrl: imageUrl,
+                  enhancedBase64: enhancedBase64,
+                  enhancedImageUrl: enhancementResult.enhanced_url,
+                  filename: file.name,
+                  processingTime: enhancementResult.processing_time,
+                  enhancementsApplied: enhancementResult.enhancements_applied,
+                  timestamp: new Date(),
+                })
+            );
+          } else {
+            throw new Error(enhancementResult.error || "Enhancement failed");
+          }
         } catch (error) {
-          console.error('Error processing file:', error);
-          setError("Failed to process photo");
+          setMessages((prev) => prev.filter((msg) => msg.id !== processingId));
+          addMessage(
+            "assistant",
+            "text",
+            `❌ ${error instanceof Error ? error.message : "Enhancement failed. Please try again."}`
+          );
+        } finally {
           setIsProcessing(false);
         }
       };
-      reader.onerror = () => {
-        setError("Failed to read photo file");
-        setIsProcessing(false);
-      };
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Error in handleFileChange:', error);
-      setError("Failed to upload photo");
+      setMessages((prev) => prev.filter((msg) => msg.id !== processingId));
+      addMessage("assistant", "text", "❌ Failed to process image. Please try again.");
       setIsProcessing(false);
-    }
-  }, []);
-
-  const processEnhancement = async (imageData: string, filename?: string) => {
-    try {
-      setProgress(20);
-
-      // Test backend connection first
-      console.log('Testing backend connection...');
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://pixelfly.onrender.com';
-      console.log('Backend URL:', backendUrl);
-
-      try {
-        const healthResponse = await fetch(`${backendUrl}/health`);
-        console.log('Health check response:', healthResponse.status);
-        if (healthResponse.ok) {
-          const healthData = await healthResponse.json();
-          console.log('Health check data:', healthData);
-        }
-      } catch (healthError) {
-        console.error('Health check failed:', healthError);
-        throw new Error('Backend is not accessible. Please make sure it\'s running.');
-      }
-
-      // Determine if we have base64 or URL
-      const isBase64 = imageData.startsWith('data:');
-      let base64Data = '';
-
-      if (isBase64) {
-        base64Data = imageData.split(',')[1];
-      } else {
-        // Convert blob URL to base64
-        try {
-          const response = await fetch(imageData);
-          const blob = await response.blob();
-          const reader = new FileReader();
-          base64Data = await new Promise((resolve) => {
-            reader.onload = () => {
-              const result = reader.result as string;
-              resolve(result.split(',')[1]);
-            };
-            reader.readAsDataURL(blob);
-          });
-        } catch (e) {
-          throw new Error("Failed to process image");
-        }
-      }
-
-      const request = {
-        user_id: session?.user?.id || "anonymous",
-        enhancement_type: "auto",
-        return_format: "base64" as const,
-        image_base64: base64Data
-      };
-
-      setProgress(50);
-
-      console.log('Calling backend with request:', {
-        ...request,
-        image_base64: request.image_base64 ? `[${request.image_base64.length} chars]` : 'none'
-      });
-
-      // Call backend for AI enhancement
-      const enhancementResult = await backendClient.enhancePhotoWithProgress(
-        request,
-        (progress) => {
-          console.log('Progress update:', progress);
-          setProgress(progress);
-        }
-      );
-
-      console.log('Enhancement result:', {
-        success: enhancementResult.success,
-        enhanced_base64_length: enhancementResult.enhanced_base64?.length,
-        processing_time: enhancementResult.processing_time,
-        enhancements_applied: enhancementResult.enhancements_applied
-      });
-
-      if (enhancementResult.success) {
-        // Ensure enhanced_base64 doesn't have data URL prefix
-        let enhancedBase64 = enhancementResult.enhanced_base64;
-        if (enhancedBase64 && enhancedBase64.startsWith('data:')) {
-          enhancedBase64 = enhancedBase64.split(',')[1];
-          console.log('Removed data URL prefix from enhanced image');
-        }
-
-        const resultData = {
-          originalUrl: `data:image/jpeg;base64,${base64Data}`,
-          enhancedUrl: enhancementResult.enhanced_url,
-          enhancedBase64: enhancedBase64,
-          originalFilename: filename || 'photo.jpg',
-          processingTime: enhancementResult.processing_time,
-          enhancementsApplied: enhancementResult.enhancements_applied
-        };
-
-        console.log('Setting result:', {
-          originalUrlLength: resultData.originalUrl.length,
-          enhancedBase64Length: resultData.enhancedBase64?.length,
-          enhancedUrl: resultData.enhancedUrl,
-          filename: resultData.originalFilename,
-          originalBase64Length: base64Data.length
-        });
-
-        setResult(resultData);
-      } else {
-        throw new Error(enhancementResult.error || "Enhancement failed");
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Enhancement failed");
-    } finally {
-      setIsProcessing(false);
-      setProgress(0);
     }
   };
 
-  const downloadEnhanced = () => {
-    if (result?.enhancedBase64) {
-      // Download from base64 data
-      const filename = result.originalFilename
-        ? `enhanced-${result.originalFilename}`
-        : 'enhanced-photo.jpg';
+  const addMessage = (
+    role: "user" | "assistant",
+    type: "text" | "image" | "enhancement",
+    content?: string,
+    imageUrl?: string,
+    originalImageUrl?: string,
+    enhancedImageUrl?: string,
+    filename?: string,
+    processingTime?: number,
+    enhancementsApplied?: string[],
+    isProcessing?: boolean,
+    enhancedBase64?: string
+  ) => {
+    const newMessage: ChatMessage = {
+      id: `${role}-${Date.now()}-${Math.random()}`,
+      role,
+      type,
+      content,
+      imageUrl,
+      originalImageUrl,
+      enhancedImageUrl,
+      enhancedBase64,
+      filename,
+      processingTime,
+      enhancementsApplied,
+      timestamp: new Date(),
+      isProcessing,
+    };
 
-      try {
-        console.log('Starting download for:', filename);
-        console.log('Enhanced base64 length:', result.enhancedBase64.length);
+    setMessages((prev) => [...prev, newMessage]);
+  };
 
-        // Ensure we have clean base64 data
-        let base64 = result.enhancedBase64;
-        if (base64.startsWith('data:')) {
-          base64 = base64.split(',')[1];
-          console.log('Removed data URL prefix, new length:', base64.length);
-        }
+  const handleSend = () => {
+    if (!input.trim() || isProcessing) return;
 
-        // Convert base64 to blob
-        const byteCharacters = atob(base64);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'image/jpeg' });
+    const userMessage = input.trim();
+    setInput("");
+    addMessage("user", "text", userMessage);
 
-        console.log('Created blob with size:', blob.size, 'bytes');
-
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        console.log('Download initiated successfully');
-      } catch (error) {
-        console.error('Download failed:', error);
-        setError('Failed to download enhanced image');
+    // Simple responses for text messages
+    setTimeout(() => {
+      if (userMessage.toLowerCase().includes("help") || userMessage.toLowerCase().includes("how")) {
+        addMessage(
+          "assistant",
+          "text",
+          "To enhance a photo, simply drag and drop an image or click the upload button. I'll automatically improve clarity, colors, and overall quality! 📸✨"
+        );
+      } else if (userMessage.toLowerCase().includes("hello") || userMessage.toLowerCase().includes("hi")) {
+        addMessage("assistant", "text", "Hello! Ready to enhance some photos? Just upload an image! 🚀");
+      } else {
+        addMessage(
+          "assistant",
+          "text",
+          "I'm here to help enhance your photos! Upload an image to get started. You can drag and drop or use the upload button. 🎨"
+        );
       }
-    } else if (result?.enhancedUrl) {
-      // Fallback to URL download
-      const link = document.createElement('a');
-      link.href = result.enhancedUrl;
-      link.download = 'enhanced-photo.jpg';
+    }, 500);
+  };
+
+  const downloadEnhanced = (base64: string, filename: string) => {
+    try {
+      let cleanBase64 = base64;
+      if (cleanBase64.startsWith("data:")) {
+        cleanBase64 = cleanBase64.split(",")[1];
+      }
+
+      const byteCharacters = atob(cleanBase64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "image/jpeg" });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `enhanced-${filename}`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download failed:", error);
     }
   };
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 py-20">
-        <div className="max-w-4xl mx-auto p-6 space-y-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              AI Photo Enhancement
-            </h1>
-            <p className="text-xl text-gray-600 mb-4">
-              Make your photos pop out with AI-powered enhancement
-            </p>
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6 max-w-2xl mx-auto">
-              <p className="text-purple-800 text-sm">
-                ✨ <strong>Welcome {session?.user?.name || session?.user?.email}!</strong>
-                Enhance your photos with our AI-powered technology.
-              </p>
+      <div className="flex flex-col h-[calc(100vh-4rem)] bg-gray-50">
+        {/* Chat Container */}
+        <ScrollArea className="flex-1 px-4">
+          <div className="max-w-3xl mx-auto py-6 space-y-6" ref={scrollRef}>
+            <AnimatePresence>
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className={cn(
+                    "flex gap-3",
+                    message.role === "user" ? "justify-end" : "justify-start"
+                  )}
+                >
+                  {message.role === "assistant" && (
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarFallback className="bg-purple-100 text-purple-600">
+                        <Sparkles className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+
+                  <div
+                    className={cn(
+                      "flex flex-col gap-2 max-w-[80%]",
+                      message.role === "user" ? "items-end" : "items-start"
+                    )}
+                  >
+                    {/* Text Messages */}
+                    {message.type === "text" && message.content && (
+                      <div
+                        className={cn(
+                          "rounded-2xl px-4 py-2.5 text-sm",
+                          message.role === "user"
+                            ? "bg-purple-600 text-white"
+                            : "bg-white text-gray-800 shadow-sm border border-gray-200"
+                        )}
+                      >
+                        {message.content}
+                      </div>
+                    )}
+
+                    {/* Image Messages */}
+                    {message.type === "image" && message.imageUrl && (
+                      <div className="rounded-xl overflow-hidden border-2 border-purple-200 shadow-md max-w-sm">
+                        <img
+                          src={message.imageUrl}
+                          alt={message.filename || "Uploaded image"}
+                          className="w-full h-auto max-h-64 object-contain bg-gray-50"
+                        />
+                      </div>
+                    )}
+
+                    {/* Enhancement Results */}
+                    {message.type === "enhancement" && (
+                      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 space-y-4 max-w-2xl">
+                        {message.isProcessing ? (
+                          <div className="flex items-center gap-3 py-4">
+                            <Loader2 className="h-5 w-5 text-purple-600 animate-spin" />
+                            <span className="text-gray-600">{message.content || "Enhancing your photo..."}</span>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-sm font-semibold text-gray-800 mb-3">
+                              ✨ Enhancement Complete!
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-4">
+                              {/* Original */}
+                              <div className="space-y-2">
+                                <div className="text-xs font-medium text-gray-600">Original</div>
+                                <div className="rounded-lg overflow-hidden border border-gray-200">
+                                  <img
+                                    src={message.originalImageUrl}
+                                    alt="Original"
+                                    className="w-full h-auto max-h-64 object-contain bg-gray-50"
+                                  />
+                                </div>
+                              </div>
+                              {/* Enhanced */}
+                              <div className="space-y-2">
+                                <div className="text-xs font-medium text-purple-600">Enhanced</div>
+                                <div className="rounded-lg overflow-hidden border-2 border-purple-300 relative">
+                                  <img
+                                    src={
+                                      message.enhancedBase64
+                                        ? `data:image/jpeg;base64,${message.enhancedBase64}`
+                                        : message.enhancedImageUrl || ""
+                                    }
+                                    alt="Enhanced"
+                                    className="w-full h-auto max-h-64 object-contain bg-gray-50"
+                                  />
+                                  <div className="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded">
+                                    AI
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            {message.enhancedBase64 && message.filename && (
+                              <Button
+                                onClick={() => downloadEnhanced(message.enhancedBase64!, message.filename!)}
+                                size="sm"
+                                className="w-full bg-purple-600 hover:bg-purple-700"
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Download Enhanced Image
+                              </Button>
+                            )}
+                            {message.enhancementsApplied && message.enhancementsApplied.length > 0 && (
+                              <div className="flex flex-wrap gap-2 pt-2">
+                                {message.enhancementsApplied.map((enhancement, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full"
+                                  >
+                                    {enhancement.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {message.processingTime && (
+                              <div className="text-xs text-gray-500 text-center">
+                                Processed in {message.processingTime.toFixed(2)}s
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="text-xs text-gray-400 px-2">
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+
+                  {message.role === "user" && (
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarFallback className="bg-gray-200 text-gray-600">
+                        {session?.user?.name?.[0]?.toUpperCase() || session?.user?.email?.[0]?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+
+        {/* Input Area */}
+        <div className="border-t border-gray-200 bg-white">
+          <div className="max-w-3xl mx-auto p-4">
+            {/* Drag and Drop Area */}
+            <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              className={cn(
+                "mb-3 border-2 border-dashed rounded-lg p-4 text-center transition-colors",
+                dragActive
+                  ? "border-purple-500 bg-purple-50"
+                  : "border-gray-300 hover:border-purple-400"
+              )}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                <Upload className="h-4 w-4" />
+                <span>
+                  Drag and drop an image here, or{" "}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-purple-600 hover:text-purple-700 font-medium"
+                  >
+                    click to upload
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            {/* Text Input */}
+            <div className="flex gap-2">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder="Ask me anything about photo enhancement..."
+                className="flex-1"
+                disabled={isProcessing}
+              />
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || isProcessing}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {isProcessing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
             </div>
           </div>
-
-          {/* Backend Status */}
-          {/* <BackendStatus /> */}
-
-          {/* Upload Area */}
-          <Card>
-            <CardContent className="p-8">
-              <div className={`border-2 border-dashed rounded-xl p-12 text-center transition-all border-gray-300 hover:border-purple-400 hover:bg-gray-50 ${isProcessing ? "opacity-50" : ""}`}>
-                <div className="space-y-4">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
-                    <Upload className="w-8 h-8 text-purple-600" />
-                  </div>
-
-                  <div>
-                    <p className="text-lg font-semibold text-gray-900">
-                      Upload a photo to enhance
-                    </p>
-                    <p className="text-gray-500 mt-2">
-                      Select a photo • Max 8MB • JPG, PNG, WebP
-                    </p>
-                  </div>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    disabled={isProcessing}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Processing Progress */}
-          {isProcessing && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Sparkles className="w-5 h-5 text-purple-600 animate-spin" />
-                    <span className="font-medium">
-                      Enhancing with AI...
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${progress}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    This may take a few seconds depending on image complexity
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Error Display */}
-          {error && (
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 text-red-700">
-                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs">!</span>
-                  </div>
-                  <span className="font-medium">{error}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Results Display */}
-          {result && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-purple-600" />
-                  Enhancement Complete!
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Before/After Comparison */}
-                <div className="space-y-6">
-                  <h3 className="text-xl font-bold text-center text-gray-800">🔍 Before & After Comparison</h3>
-
-                  <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                    {/* Enhancement Info Header */}
-                    <div className="mb-4 text-center">
-                      <h4 className="text-lg font-semibold text-gray-800">
-                        📷 {result.originalFilename || 'Enhanced Photo'}
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        Processing time: {result.processingTime?.toFixed(2)}s • {result.enhancementsApplied?.length} enhancements applied
-                      </p>
-                    </div>
-
-                    {/* Images Grid */}
-                    <div className="grid lg:grid-cols-2 gap-6">
-                      {/* Original */}
-                      <div className="space-y-3">
-                        <h5 className="font-semibold text-gray-700 text-center flex items-center justify-center gap-2">
-                          📸 Original Image
-                          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Before</span>
-                        </h5>
-                        <div className="relative rounded-xl overflow-hidden border-2 border-gray-300 shadow-md hover:shadow-lg transition-shadow">
-                          <img
-                            src={result.originalUrl}
-                            alt="Original photo"
-                            className="w-full h-auto max-h-96 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
-                            onError={(e) => {
-                              console.error('Failed to load original image');
-                              e.currentTarget.style.display = 'none';
-                            }}
-                            onLoad={() => console.log('Original image loaded successfully')}
-                            onClick={() => setPreviewModal({
-                              isOpen: true,
-                              imageData: result.originalUrl.split(',')[1] || result.originalUrl,
-                              title: `Original - ${result.originalFilename || 'Photo'}`,
-                              type: 'original'
-                            })}
-                          />
-                          <div className="absolute top-3 left-3 bg-gray-800 bg-opacity-80 text-white text-sm px-3 py-1 rounded-full">
-                            📸 Original
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Enhanced */}
-                      <div className="space-y-3">
-                        <h5 className="font-semibold text-purple-700 text-center flex items-center justify-center gap-2">
-                          ✨ Enhanced Image
-                          <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">After AI</span>
-                        </h5>
-                        <div className="relative rounded-xl overflow-hidden border-2 border-purple-300 shadow-md hover:shadow-lg transition-shadow">
-                          <img
-                            src={result.enhancedBase64 ? `data:image/jpeg;base64,${result.enhancedBase64}` : result.enhancedUrl}
-                            alt="Enhanced photo"
-                            className="w-full h-auto max-h-96 object-contain bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
-                            onError={(e) => {
-                              console.error('Failed to load enhanced image');
-                              console.log('Enhanced base64 length:', result.enhancedBase64?.length);
-                              e.currentTarget.style.display = 'none';
-                            }}
-                            onLoad={(e) => {
-                              console.log('Enhanced image loaded successfully');
-                              console.log('Enhanced image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
-                            }}
-                            onClick={() => setPreviewModal({
-                              isOpen: true,
-                              imageData: result.enhancedBase64 || (result.enhancedUrl?.split(',')[1] || result.enhancedUrl || ''),
-                              title: `Enhanced - ${result.originalFilename || 'Photo'}`,
-                              type: 'enhanced'
-                            })}
-                          />
-                          <div className="absolute top-3 left-3 bg-purple-600 text-white text-xs px-2 py-1 rounded shadow-lg">
-                            ✨ AI Enhanced
-                          </div>
-                          <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded shadow-lg">
-                            Enhanced Quality
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Quick Download */}
-                    <div className="mt-4 flex justify-center">
-                      <button
-                        onClick={downloadEnhanced}
-                        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-                      >
-                        📥 Download Enhanced Image
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Enhancement Details */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-semibold mb-3">Enhancements Applied:</h4>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {result.enhancementsApplied.map((enhancement, index) => (
-                      <span
-                        key={index}
-                        className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium"
-                      >
-                        {enhancement.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Processing time: {result.processingTime.toFixed(2)}s
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Features Info */}
-          <Card className="bg-gradient-to-r from-purple-50 to-blue-50">
-            <CardContent className="p-6">
-              <h3 className="font-semibold mb-4 text-center">AI Enhancement Features</h3>
-              <div className="grid md:grid-cols-3 gap-4">
-                {[
-                  { icon: Sparkles, title: "Smart Enhancement", desc: "AI analyzes and improves quality automatically" },
-                  { icon: Zap, title: "Lightning Fast", desc: "Get results in seconds with powerful AI" },
-                  { icon: ImageIcon, title: "Professional Quality", desc: "Make your photos pop out with stunning results" }
-                ].map((feature, index) => (
-                  <div key={index} className="text-center">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <feature.icon className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <h4 className="font-medium mb-2">{feature.title}</h4>
-                    <p className="text-sm text-gray-600">{feature.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
-
-      {/* Full-Screen Preview Modal */}
-      {previewModal.isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
-          <div className="relative max-w-7xl max-h-full w-full h-full flex flex-col">
-            {/* Modal Header */}
-            <div className="flex justify-between items-center mb-4 text-white">
-              <div>
-                <h3 className="text-xl font-bold">{previewModal.title}</h3>
-                <p className="text-sm text-gray-300">
-                  {previewModal.type === 'enhanced' ? '✨ AI Enhanced Version' : '📸 Original Version'}
-                </p>
-              </div>
-              <button
-                onClick={() => setPreviewModal({isOpen: false, imageData: '', title: '', type: 'original'})}
-                className="text-white hover:text-gray-300 text-2xl font-bold p-2"
-              >
-                ✕
-              </button>
-            </div>
-            {/* Modal Image */}
-            <div className="flex-1 flex items-center justify-center">
-              <img
-                src={previewModal.type === 'original' ? result?.originalUrl : `data:image/jpeg;base64,${previewModal.imageData}`}
-                alt={previewModal.title}
-                className="max-w-full max-h-full object-contain"
-                onError={(e) => {
-                  console.error('Failed to load modal image');
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              
-            </div>
-
-            {/* Modal Footer */}
-            <div className="mt-4 flex justify-center gap-4">
-              <button
-                onClick={() => setPreviewModal({isOpen: false, imageData: '', title: '', type: 'original'})}
-                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Close
-              </button>
-              {previewModal.type === 'enhanced' && (
-                <button
-                  onClick={downloadEnhanced}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  📥 Download Enhanced
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

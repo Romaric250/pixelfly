@@ -61,7 +61,7 @@ class BackendClient {
       this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://pixelfly.onrender.com';
     } else {
       // In development, use local backend
-      this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://pixelfly.onrender.com';
+      this.baseUrl = "http://localhost:5000";
     }
     console.log('Backend client initialized with URL:', this.baseUrl);
   }
